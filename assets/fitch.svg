@@ -1,0 +1,54 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shadow -->
+  <ellipse cx="60" cy="114" rx="26" ry="6" fill="rgba(0,0,0,0.25)"/>
+
+  <!-- Ears (wolf-pointed) -->
+  <polygon points="28,44 20,14 42,36" fill="#1A1A2E"/>
+  <polygon points="92,44 100,14 78,36" fill="#1A1A2E"/>
+  <polygon points="29,40 23,18 40,34" fill="#2D2D4A"/>
+  <polygon points="91,40 97,18 80,34" fill="#2D2D4A"/>
+
+  <!-- Head -->
+  <circle cx="60" cy="62" r="34" fill="#1A1A2E"/>
+
+  <!-- Face lighter muzzle area -->
+  <ellipse cx="60" cy="72" rx="20" ry="16" fill="#252540"/>
+
+  <!-- Scar (antagonist detail) -->
+  <path d="M 46 44 L 50 56" stroke="#FF3D5A" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- Eye glow (menacing red) -->
+  <ellipse cx="42" cy="54" rx="11" ry="10" fill="#FF1A1A" opacity="0.25"/>
+  <ellipse cx="78" cy="54" rx="11" ry="10" fill="#FF1A1A" opacity="0.25"/>
+
+  <!-- Eye whites -->
+  <ellipse cx="42" cy="54" rx="9" ry="8" fill="#2A0505"/>
+  <ellipse cx="78" cy="54" rx="9" ry="8" fill="#2A0505"/>
+
+  <!-- Iris (glowing red) -->
+  <circle cx="43" cy="54" r="6" fill="#CC1A1A"/>
+  <circle cx="79" cy="54" r="6" fill="#CC1A1A"/>
+
+  <!-- Pupils (narrow, threatening) -->
+  <ellipse cx="43" cy="55" rx="2.5" ry="5" fill="#0A0000"/>
+  <ellipse cx="79" cy="55" rx="2.5" ry="5" fill="#0A0000"/>
+
+  <!-- Eye highlights -->
+  <circle cx="45.5" cy="51" r="2" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="81.5" cy="51" r="2" fill="rgba(255,255,255,0.5)"/>
+
+  <!-- Nose -->
+  <ellipse cx="60" cy="69" rx="5" ry="3.5" fill="#0D0D1A"/>
+
+  <!-- Smirk -->
+  <path d="M 52 75 Q 62 80 70 74" stroke="#333355" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Dark aura particles -->
+  <circle cx="18" cy="48" r="3" fill="#7C5CFC" opacity="0.35"/>
+  <circle cx="102" cy="42" r="2.5" fill="#FF3D5A" opacity="0.35"/>
+  <circle cx="14" cy="68" r="2" fill="#7C5CFC" opacity="0.25"/>
+  <circle cx="106" cy="65" r="2" fill="#FF3D5A" opacity="0.25"/>
+
+  <!-- "RIVAL" glowing text hint -->
+  <text x="50" y="14" font-size="9" font-weight="bold" fill="#FF3D5A" opacity="0.85" font-family="sans-serif">RIVAL</text>
+</svg>

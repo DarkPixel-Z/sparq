@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Sparq — ADHD Companion App</title>
+  <title>Sparq — ADHD Companion</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -21,7 +21,7 @@
         <h1>Sparq ⚡</h1>
       </div>
       <div class="avatar-btn" onclick="switchPage('profile')">
-        🦊
+        <img src="assets/red-panda.svg" alt="Red Panda" width="28" height="28">
         <div class="notif-dot"></div>
       </div>
     </div>
@@ -32,10 +32,12 @@
     <!-- Pet Card -->
     <div class="pet-card">
       <div class="pet-row">
-        <div class="pet-avatar" onclick="petTap()" title="Tap Buddy!">🦊</div>
+        <div class="pet-avatar" onclick="petTap()" title="Tap Karu!">
+          <img src="assets/red-panda.svg" alt="Karu the Red Panda" class="pet-img">
+        </div>
         <div class="pet-info">
-          <div class="pet-name">Buddy <div class="level-badge">✦ Lv.3</div></div>
-          <div class="pet-status"><div class="status-dot"></div>Happy Today</div>
+          <div class="pet-name">Karu <div class="level-badge pixel-text">✦ Lv.3</div></div>
+          <div class="pet-status"><div class="status-dot"></div>Happy Today ✿</div>
           <div class="xp-bar-wrap">
             <div class="xp-bar-fill" id="xpBar" style="width:55%"></div>
           </div>
@@ -45,20 +47,39 @@
       <div class="stats-row">
         <div class="stat-box">
           <div class="stat-icon">🏆</div>
-          <div class="stat-val purple" id="taskCount">3</div>
-          <div class="stat-lbl">Tasks</div>
+          <div class="stat-val purple pixel-text" id="taskCount">3</div>
+          <div class="stat-lbl">Quests</div>
         </div>
         <div class="stat-box">
           <div class="stat-icon">🔥</div>
-          <div class="stat-val orange" id="streakCount">0</div>
+          <div class="stat-val orange pixel-text" id="streakCount">0</div>
           <div class="stat-lbl">Streak</div>
         </div>
         <div class="stat-box">
           <div class="stat-icon">⚡</div>
-          <div class="stat-val yellow" id="totalXP">55</div>
+          <div class="stat-val yellow pixel-text" id="totalXP">55</div>
           <div class="stat-lbl">Total XP</div>
         </div>
       </div>
+    </div>
+
+    <!-- Fitch Rival Card -->
+    <div class="rival-card" id="rivalCard">
+      <div class="rival-badge">⚔️ RIVAL</div>
+      <div class="rival-row">
+        <div class="rival-avatar">
+          <img src="assets/fitch.svg" alt="Fitch" width="52" height="52">
+        </div>
+        <div class="rival-info">
+          <div class="rival-name">Fitch <span class="rival-title">Dark Wolf</span></div>
+          <div class="rival-stats">
+            <span class="rival-stat-item red">⚡ <span id="fitchXP">72</span> XP</span>
+            <span class="rival-stat-item">🔥 3 day streak</span>
+          </div>
+          <div class="rival-gap" id="rivalGap">You're 17 XP behind — catch up!</div>
+        </div>
+      </div>
+      <button class="rival-btn" onclick="challengeFitch()">⚔️ Challenge Fitch</button>
     </div>
 
     <!-- Mood Check -->
@@ -79,14 +100,14 @@
       <div class="streak-icon-wrap">🔥</div>
       <div class="streak-info">
         <h4><span id="streakDays">0</span> Day Streak</h4>
-        <p>Complete a habit daily to ignite your streak</p>
+        <p>Complete a daily quest to ignite your streak</p>
       </div>
     </div>
 
-    <!-- Tasks -->
+    <!-- Tasks / Quests -->
     <div class="section-title">
-      Today's Tasks
-      <a onclick="showAddTask()">+ Add</a>
+      <span>📜 Daily Quests</span>
+      <a onclick="showAddTask()">+ New Quest</a>
     </div>
 
     <div id="taskList">
@@ -117,6 +138,64 @@
     </div>
   </div>
 
+  <!-- ── JOURNAL PAGE ───────────────────────────────────────────────────────── -->
+  <div class="page" id="page-journal">
+    <div class="header">
+      <div class="header-left">
+        <h3>Daily</h3>
+        <h1>Journal 📓</h1>
+      </div>
+    </div>
+
+    <div class="date-pill" id="journalDatePill"></div>
+
+    <!-- Write entry -->
+    <div class="journal-write-card">
+      <div class="journal-write-header">
+        <span>Today's Entry</span>
+        <span class="journal-xp-badge">+10 XP on save</span>
+      </div>
+      <div class="journal-mood-row">
+        <button class="journal-mood-btn selected" data-emoji="😄" onclick="setJournalMood(this)">😄</button>
+        <button class="journal-mood-btn" data-emoji="😌" onclick="setJournalMood(this)">😌</button>
+        <button class="journal-mood-btn" data-emoji="😤" onclick="setJournalMood(this)">😤</button>
+        <button class="journal-mood-btn" data-emoji="😔" onclick="setJournalMood(this)">😔</button>
+        <button class="journal-mood-btn" data-emoji="🤩" onclick="setJournalMood(this)">🤩</button>
+      </div>
+      <textarea
+        id="journalEntry"
+        class="journal-textarea"
+        placeholder="What's on your mind today? Let it out ✍️&#10;&#10;(No judgment. This is your safe space.)"
+        maxlength="1000"
+      ></textarea>
+      <div class="journal-footer">
+        <span class="word-count" id="wordCount">0 / 1000</span>
+        <button class="journal-save-btn" onclick="saveJournalEntry()">Save Entry ✦</button>
+      </div>
+    </div>
+
+    <!-- Past entries -->
+    <div class="section-title">Past Entries</div>
+    <div id="journalList">
+      <div class="journal-entry-card">
+        <div class="journal-entry-header">
+          <span class="journal-entry-mood">😄</span>
+          <span class="journal-entry-date">Yesterday</span>
+          <span class="journal-entry-xp">+10 XP</span>
+        </div>
+        <p class="journal-entry-text">Had a really solid focus session today. Karu leveled up which made me so happy!! Fitch is still ahead but I'm catching up 😤</p>
+      </div>
+      <div class="journal-entry-card">
+        <div class="journal-entry-header">
+          <span class="journal-entry-mood">😌</span>
+          <span class="journal-entry-date">2 days ago</span>
+          <span class="journal-entry-xp">+10 XP</span>
+        </div>
+        <p class="journal-entry-text">Slow day. Didn't finish all my quests but I'm being kind to myself about it. Tomorrow is a new day.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- ── REMINDERS PAGE ─────────────────────────────────────────────────────── -->
   <div class="page" id="page-reminders">
     <div class="header">
@@ -136,7 +215,6 @@
       </div>
       <div class="reminder-toggle" onclick="toggleReminder(this)"><div class="toggle-knob"></div></div>
     </div>
-
     <div class="reminder-item">
       <div class="reminder-color" style="background: var(--teal)"></div>
       <div class="reminder-content">
@@ -145,7 +223,6 @@
       </div>
       <div class="reminder-toggle" onclick="toggleReminder(this)"><div class="toggle-knob"></div></div>
     </div>
-
     <div class="reminder-item">
       <div class="reminder-color" style="background: var(--orange)"></div>
       <div class="reminder-content">
@@ -154,7 +231,6 @@
       </div>
       <div class="reminder-toggle off" onclick="toggleReminder(this)"><div class="toggle-knob"></div></div>
     </div>
-
     <div class="reminder-item">
       <div class="reminder-color" style="background: var(--pink)"></div>
       <div class="reminder-content">
@@ -163,7 +239,6 @@
       </div>
       <div class="reminder-toggle" onclick="toggleReminder(this)"><div class="toggle-knob"></div></div>
     </div>
-
     <div class="reminder-item">
       <div class="reminder-color" style="background: var(--yellow)"></div>
       <div class="reminder-content">
@@ -193,14 +268,13 @@
           <div class="user-streak">🔥 12 day streak</div>
         </div>
       </div>
-      <div class="community-message">Finally finished my focus session without getting distracted!! 🥳 Buddy is SO happy rn. This app is actually helping my brain.</div>
+      <div class="community-message">Finally finished my focus session without getting distracted!! 🥳 Karu is SO happy rn. This app is actually helping my brain.</div>
       <div class="community-actions">
         <button class="comm-btn" onclick="likePost(this)">❤️ <span>24</span></button>
         <button class="comm-btn">💬 8</button>
         <button class="comm-btn">✨ Cheer</button>
       </div>
     </div>
-
     <div class="community-card">
       <div class="community-user">
         <div class="user-avatar" style="background: linear-gradient(135deg,#00D4AA,#4D96FF)">🦁</div>
@@ -216,7 +290,6 @@
         <button class="comm-btn">✨ Cheer</button>
       </div>
     </div>
-
     <div class="community-card">
       <div class="community-user">
         <div class="user-avatar" style="background: linear-gradient(135deg,#FFD93D,#FF7849)">🐻</div>
@@ -225,7 +298,7 @@
           <div class="user-streak">⚡ 55 XP today</div>
         </div>
       </div>
-      <div class="community-message">Week 3 of using Sparq. My pet Blaze is level 7 now 😭 Never thought a virtual fox would make me want to drink water but here we are 💧</div>
+      <div class="community-message">Week 3 of using Sparq. My red panda Karu is level 7 now 😭 Never thought a virtual panda would make me want to drink water but here we are 💧</div>
       <div class="community-actions">
         <button class="comm-btn" onclick="likePost(this)">❤️ <span>89</span></button>
         <button class="comm-btn">💬 22</button>
@@ -237,61 +310,58 @@
   <!-- ── PROFILE PAGE ───────────────────────────────────────────────────────── -->
   <div class="page" id="page-profile">
     <div class="profile-header">
-      <div class="profile-avatar-big">🦊</div>
+      <div class="profile-avatar-big">
+        <img src="assets/red-panda.svg" alt="Karu" width="54" height="54">
+      </div>
       <div class="profile-name">Sparq User</div>
       <div class="profile-tag">Neurodivergent &amp; Proud ✦ ADHD</div>
     </div>
 
     <div class="profile-stats">
       <div class="profile-stat">
-        <div class="profile-stat-val" id="profileXP">55</div>
+        <div class="profile-stat-val pixel-text" id="profileXP">55</div>
         <div class="profile-stat-lbl">Total XP</div>
       </div>
       <div class="profile-stat">
-        <div class="profile-stat-val">0</div>
+        <div class="profile-stat-val pixel-text">0</div>
         <div class="profile-stat-lbl">Streak</div>
       </div>
       <div class="profile-stat">
-        <div class="profile-stat-val">3</div>
+        <div class="profile-stat-val pixel-text">3</div>
         <div class="profile-stat-lbl">Done</div>
       </div>
     </div>
 
-    <div class="section-title">Settings</div>
+    <!-- Rival snapshot -->
+    <div class="section-title">Rival Status</div>
+    <div class="rival-mini-card">
+      <img src="assets/fitch.svg" alt="Fitch" width="44" height="44" class="rival-mini-img">
+      <div class="rival-mini-info">
+        <div class="rival-mini-name">Fitch <span>Dark Wolf</span></div>
+        <div class="rival-mini-xp">⚡ <span id="fitchXPProfile">72</span> XP · Lv.4</div>
+      </div>
+      <div class="rival-mini-delta" id="rivalDelta">-17 XP</div>
+    </div>
 
+    <div class="section-title">Settings</div>
     <div class="settings-item">
       <div class="settings-icon" style="background: rgba(124,92,252,0.15)">🎨</div>
-      <div class="settings-text">
-        <h4>Customize Pet</h4>
-        <p>Change your companion's look</p>
-      </div>
+      <div class="settings-text"><h4>Customize Pet</h4><p>Change Karu's look &amp; accessories</p></div>
       <span class="settings-arrow">›</span>
     </div>
-
     <div class="settings-item">
       <div class="settings-icon" style="background: rgba(0,212,170,0.1)">🧠</div>
-      <div class="settings-text">
-        <h4>ND Profile</h4>
-        <p>ADHD, Autism, Dyslexia + more</p>
-      </div>
+      <div class="settings-text"><h4>ND Profile</h4><p>ADHD, Autism, Dyslexia + more</p></div>
       <span class="settings-arrow">›</span>
     </div>
-
     <div class="settings-item">
       <div class="settings-icon" style="background: rgba(255,217,61,0.1)">🔔</div>
-      <div class="settings-text">
-        <h4>Notifications</h4>
-        <p>Gentle reminders, no spam</p>
-      </div>
+      <div class="settings-text"><h4>Notifications</h4><p>Gentle reminders, no spam</p></div>
       <span class="settings-arrow">›</span>
     </div>
-
     <div class="settings-item">
       <div class="settings-icon" style="background: rgba(255,95,160,0.1)">💝</div>
-      <div class="settings-text">
-        <h4>Share Sparq</h4>
-        <p>Tell your people about Sparq</p>
-      </div>
+      <div class="settings-text"><h4>Share Sparq</h4><p>Tell your people about it</p></div>
       <span class="settings-arrow">›</span>
     </div>
   </div>
@@ -301,11 +371,16 @@
 <!-- FAB -->
 <button class="fab" id="fab" onclick="showAddTask()">＋</button>
 
-<!-- Bottom Nav -->
+<!-- Bottom Nav (5 tabs) -->
 <div class="bottom-nav">
   <button class="nav-btn active" id="nav-home" onclick="switchPage('home')">
     <span class="nav-icon">🏠</span>
     <span class="nav-label">Home</span>
+    <div class="nav-active-bar"></div>
+  </button>
+  <button class="nav-btn" id="nav-journal" onclick="switchPage('journal')">
+    <span class="nav-icon">📓</span>
+    <span class="nav-label">Journal</span>
     <div class="nav-active-bar"></div>
   </button>
   <button class="nav-btn" id="nav-reminders" onclick="switchPage('reminders')">
@@ -316,11 +391,11 @@
   </button>
   <button class="nav-btn" id="nav-community" onclick="switchPage('community')">
     <span class="nav-icon">🌈</span>
-    <span class="nav-label">Community</span>
+    <span class="nav-label">Feed</span>
     <div class="nav-active-bar"></div>
   </button>
   <button class="nav-btn" id="nav-profile" onclick="switchPage('profile')">
-    <span class="nav-icon">🦊</span>
+    <span class="nav-icon"><img src="assets/red-panda.svg" width="22" height="22" style="vertical-align:middle"></span>
     <span class="nav-label">Profile</span>
     <div class="nav-active-bar"></div>
   </button>
