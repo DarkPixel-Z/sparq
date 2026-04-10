@@ -1,0 +1,26 @@
+{
+  "appId": "com.sparq.adhd",
+  "appName": "Sparq",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "minSdkVersion": 26,
+    "targetSdkVersion": 34,
+    "buildToolsVersion": "34.0.0"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#FF6A00",
+      "sound": "sparq_chime.wav"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#09071A",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}

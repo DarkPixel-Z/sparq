@@ -11,6 +11,32 @@
 <div class="stars" id="stars"></div>
 <div class="xp-popup" id="xpPopup">⚡ +XP!</div>
 
+<!-- Achievement toast -->
+<div class="achievement-toast" id="achievementToast">
+  <span class="ach-icon" id="achIcon">🌟</span>
+  <div class="ach-body">
+    <div class="ach-title">Achievement Unlocked!</div>
+    <div class="ach-name" id="achName">First Step</div>
+    <div class="ach-desc" id="achDesc">Complete your first quest</div>
+  </div>
+  <span class="ach-xp" id="achXP">+20 XP</span>
+</div>
+
+<!-- Level-up modal -->
+<div class="levelup-overlay" id="levelUpModal">
+  <div class="levelup-card">
+    <div class="levelup-burst">✦</div>
+    <div class="levelup-karu">
+      <img src="assets/red-panda.svg" alt="Karu" width="90" height="90">
+    </div>
+    <div class="levelup-label">LEVEL UP!</div>
+    <div class="levelup-num pixel-text" id="levelUpNum">Level 2</div>
+    <div class="levelup-title" id="levelUpTitle">Apprentice ✦</div>
+    <div class="levelup-evo" id="evolutionMsg"></div>
+    <button class="levelup-btn pixel-text" onclick="closeLevelUp()">Keep Going! ⚡</button>
+  </div>
+</div>
+
 <div class="phone">
 
   <!-- ── HOME PAGE ─────────────────────────────────────────────────────────── -->
@@ -36,12 +62,12 @@
           <img src="assets/red-panda.svg" alt="Karu the Red Panda" class="pet-img">
         </div>
         <div class="pet-info">
-          <div class="pet-name">Karu <div class="level-badge pixel-text">✦ Lv.3</div></div>
+          <div class="pet-name">Karu <div class="level-badge pixel-text" id="petLevelBadge">✦ Lv.1</div></div>
           <div class="pet-status"><div class="status-dot"></div>Happy Today ✿</div>
           <div class="xp-bar-wrap">
             <div class="xp-bar-fill" id="xpBar" style="width:55%"></div>
           </div>
-          <div class="xp-label"><span id="currentXP">55</span> / 100 XP</div>
+          <div class="xp-label"><span id="currentXP">0</span> / <span id="xpNextLevel">100</span> XP</div>
         </div>
       </div>
       <div class="stats-row">
@@ -319,17 +345,21 @@
 
     <div class="profile-stats">
       <div class="profile-stat">
-        <div class="profile-stat-val pixel-text" id="profileXP">55</div>
+        <div class="profile-stat-val pixel-text" id="profileXP">0</div>
         <div class="profile-stat-lbl">Total XP</div>
       </div>
       <div class="profile-stat">
-        <div class="profile-stat-val pixel-text">0</div>
+        <div class="profile-stat-val pixel-text" id="profileStreak">0</div>
         <div class="profile-stat-lbl">Streak</div>
       </div>
       <div class="profile-stat">
-        <div class="profile-stat-val pixel-text">3</div>
+        <div class="profile-stat-val pixel-text" id="profileDone">0</div>
         <div class="profile-stat-lbl">Done</div>
       </div>
+    </div>
+    <div class="profile-level-row">
+      <span class="profile-level-label">Level</span>
+      <span class="profile-level-val pixel-text" id="profileLevel">1</span>
     </div>
 
     <!-- Rival snapshot -->
