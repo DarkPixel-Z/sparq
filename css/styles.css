@@ -41,6 +41,84 @@ body {
 }
 .pixel-text { font-family:'Pixelify Sans', monospace; }
 
+/* ── Auth Screen ─────────────────────────────────────────────────────────── */
+.auth-screen{
+  position:fixed; inset:0; z-index:2000;
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+}
+.auth-card{
+  width:100%; max-width:360px; text-align:center;
+}
+.auth-logo{
+  width:96px; height:96px; margin:0 auto 16px;
+  background:linear-gradient(135deg,#2D1A00,#4A2800);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  border:3px solid rgba(255,160,0,0.6);
+  box-shadow:0 0 40px rgba(200,74,20,0.5), 0 0 80px rgba(255,60,0,0.15);
+  animation:petBob 3s ease-in-out infinite;
+}
+.auth-title{
+  font-size:36px; font-weight:900; font-family:'Pixelify Sans',monospace;
+  background:linear-gradient(135deg,var(--orange),var(--yellow));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; margin-bottom:4px;
+}
+.auth-subtitle{ font-size:14px; color:var(--text2); font-weight:600; margin-bottom:24px; }
+
+.auth-tabs{ display:flex; gap:4px; background:rgba(255,255,255,0.06); border-radius:12px; padding:4px; margin-bottom:20px; }
+.auth-tab{ flex:1; padding:10px; background:none; border:none; border-radius:10px; font-size:14px; font-weight:700; color:var(--text3); cursor:pointer; font-family:inherit; transition:all .2s; }
+.auth-tab.active{ background:rgba(255,106,0,0.2); color:var(--orange); }
+
+.auth-form{ display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.auth-input{
+  width:100%; padding:14px 16px; background:rgba(255,255,255,0.06);
+  border:1.5px solid rgba(255,255,255,0.1); border-radius:14px;
+  color:var(--text); font-size:15px; font-weight:600; font-family:inherit;
+  outline:none; transition:border-color .2s;
+}
+.auth-input:focus{ border-color:rgba(255,106,0,0.5); box-shadow:0 0 16px rgba(255,100,0,0.15); }
+.auth-input::placeholder{ color:var(--text3); }
+
+.auth-submit-btn{
+  width:100%; padding:15px; border:none; border-radius:14px;
+  background:linear-gradient(135deg,#FF4500,#FF1A6E); color:white;
+  font-size:16px; font-weight:900; cursor:pointer;
+  font-family:'Pixelify Sans',monospace;
+  box-shadow:0 5px 0 rgba(130,0,50,0.6), 0 0 24px rgba(255,60,0,0.3);
+  transition:transform .12s,box-shadow .12s;
+}
+.auth-submit-btn:active{ transform:translateY(4px); box-shadow:0 1px 0 rgba(130,0,50,0.6); }
+
+.auth-forgot{ background:none; border:none; color:var(--text3); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; padding:4px; }
+.auth-forgot:hover{ color:var(--orange); }
+
+.auth-divider{ display:flex; align-items:center; gap:12px; margin-bottom:16px; color:var(--text3); font-size:12px; font-weight:700; }
+.auth-divider::before,.auth-divider::after{ content:''; flex:1; height:1px; background:rgba(255,255,255,0.08); }
+
+.auth-social{ display:flex; gap:10px; margin-bottom:16px; }
+.auth-social-btn{
+  flex:1; padding:13px; border-radius:14px; border:1.5px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.06); color:var(--text); font-size:14px; font-weight:700;
+  cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:border-color .2s,background .2s;
+}
+.auth-social-btn:hover{ border-color:rgba(255,106,0,0.3); background:rgba(255,255,255,0.1); }
+.auth-social-btn svg{ flex-shrink:0; }
+
+.auth-error{ font-size:13px; color:var(--pink); font-weight:700; min-height:20px; margin-bottom:8px; }
+.auth-legal{ font-size:11px; color:var(--text3); font-weight:600; }
+
+/* Logout */
+.logout-btn{
+  display:block; margin:20px 16px 30px; width:calc(100% - 32px); padding:14px;
+  background:rgba(255,61,154,0.08); border:1.5px solid rgba(255,61,154,0.25);
+  border-radius:14px; font-size:15px; font-weight:700; color:var(--pink);
+  cursor:pointer; font-family:inherit; transition:background .2s;
+}
+.logout-btn:hover{ background:rgba(255,61,154,0.15); }
+
 /* ── Phone ───────────────────────────────────────────────────────────────── */
 .phone {
   width:100%; max-width:400px; min-height:100vh;
