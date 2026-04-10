@@ -487,6 +487,48 @@ function showAddTask() {
 }
 
 // ─── Journal ──────────────────────────────────────────────────────────────────
+const JOURNAL_PROMPTS = [
+  "What made you smile today, even just a little?",
+  "What's one thing you're grateful for right now?",
+  "What challenged you today? How did you handle it?",
+  "If today were a movie scene, what would the title be?",
+  "What's something you did today that future-you will thank you for?",
+  "Describe your energy level today in one sentence.",
+  "What's one kind thing you can say to yourself right now?",
+  "What distracted you the most today? No judgment.",
+  "Write about a small win — even getting out of bed counts.",
+  "If your brain had a weather forecast today, what would it be?",
+  "What's one thing you wish people understood about you?",
+  "Name three things you can see, hear, and feel right now.",
+  "What would make tomorrow a good day?",
+  "What song matches your mood right now?",
+  "Write a letter to yesterday's you. What would you say?",
+];
+
+let _promptIdx = Math.floor(Math.random() * JOURNAL_PROMPTS.length);
+
+function initJournalDate() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dayName = document.getElementById('journalDayName');
+  const fullDate = document.getElementById('journalFullDate');
+  if (dayName) dayName.textContent = days[now.getDay()];
+  if (fullDate) fullDate.textContent = `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+
+  const prompt = document.getElementById('journalPrompt');
+  if (prompt) prompt.textContent = JOURNAL_PROMPTS[_promptIdx];
+
+  const badge = document.getElementById('journalStreakBadge');
+  if (badge) badge.textContent = `${state.journalCount || 0} entries`;
+}
+
+function shufflePrompt() {
+  _promptIdx = (_promptIdx + 1) % JOURNAL_PROMPTS.length;
+  const el = document.getElementById('journalPrompt');
+  if (el) el.textContent = JOURNAL_PROMPTS[_promptIdx];
+}
+
 function setJournalMood(btn) {
   document.querySelectorAll('.journal-mood-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
@@ -495,7 +537,7 @@ function setJournalMood(btn) {
 
 document.addEventListener('input', (e) => {
   if (e.target.id === 'journalEntry')
-    document.getElementById('wordCount').textContent = `${e.target.value.length} / 1000`;
+    document.getElementById('wordCount').textContent = `${e.target.value.length} / 2000`;
 });
 
 function saveJournalEntry() {
@@ -522,7 +564,6 @@ function renderJournalEntry(entry, prepend = false) {
     <div class="journal-entry-header">
       <span class="journal-entry-mood">${entry.mood}</span>
       <span class="journal-entry-date">${escapeHtml(entry.date)}</span>
-      <span class="journal-entry-xp">+${entry.xp} XP</span>
     </div>
     <p class="journal-entry-text">${escapeHtml(entry.text)}</p>`;
   prepend && list.firstChild ? list.insertBefore(card, list.firstChild) : list.appendChild(card);
@@ -539,6 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initStars();
   initDate();
   initBlossoms();
+  initJournalDate();
   updateStreak();
   updateUI();
 });

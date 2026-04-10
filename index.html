@@ -218,54 +218,65 @@
   <div class="page" id="page-journal">
     <div class="header">
       <div class="header-left">
-        <h3>Daily</h3>
-        <h1>Journal 📓</h1>
+        <h3>My</h3>
+        <h1>Journal</h1>
+      </div>
+      <div class="journal-streak-badge" id="journalStreakBadge">0 entries</div>
+    </div>
+
+    <div class="journal-date-hero" id="journalDateHero">
+      <div class="journal-day-name" id="journalDayName">Thursday</div>
+      <div class="journal-full-date" id="journalFullDate">April 10, 2026</div>
+    </div>
+
+    <!-- Prompt of the day -->
+    <div class="journal-prompt-card">
+      <div class="journal-prompt-label">Prompt of the day</div>
+      <div class="journal-prompt-text" id="journalPrompt">What made you smile today, even just a little?</div>
+      <button class="journal-prompt-skip" onclick="shufflePrompt()">Try another</button>
+    </div>
+
+    <!-- How are you feeling -->
+    <div class="journal-mood-card">
+      <div class="journal-mood-label">How are you right now?</div>
+      <div class="journal-mood-row">
+        <button class="journal-mood-btn" data-emoji="😩" onclick="setJournalMood(this)"><span>😩</span><small>Rough</small></button>
+        <button class="journal-mood-btn" data-emoji="😔" onclick="setJournalMood(this)"><span>😔</span><small>Low</small></button>
+        <button class="journal-mood-btn" data-emoji="😐" onclick="setJournalMood(this)"><span>😐</span><small>Meh</small></button>
+        <button class="journal-mood-btn selected" data-emoji="🙂" onclick="setJournalMood(this)"><span>🙂</span><small>Okay</small></button>
+        <button class="journal-mood-btn" data-emoji="😄" onclick="setJournalMood(this)"><span>😄</span><small>Good</small></button>
+        <button class="journal-mood-btn" data-emoji="🤩" onclick="setJournalMood(this)"><span>🤩</span><small>Great</small></button>
       </div>
     </div>
 
-    <div class="date-pill" id="journalDatePill"></div>
-
     <!-- Write entry -->
     <div class="journal-write-card">
-      <div class="journal-write-header">
-        <span>Today's Entry</span>
-        <span class="journal-xp-badge">+10 XP on save</span>
-      </div>
-      <div class="journal-mood-row">
-        <button class="journal-mood-btn selected" data-emoji="😄" onclick="setJournalMood(this)">😄</button>
-        <button class="journal-mood-btn" data-emoji="😌" onclick="setJournalMood(this)">😌</button>
-        <button class="journal-mood-btn" data-emoji="😤" onclick="setJournalMood(this)">😤</button>
-        <button class="journal-mood-btn" data-emoji="😔" onclick="setJournalMood(this)">😔</button>
-        <button class="journal-mood-btn" data-emoji="🤩" onclick="setJournalMood(this)">🤩</button>
-      </div>
       <textarea
         id="journalEntry"
         class="journal-textarea"
-        placeholder="What's on your mind today? Let it out ✍️&#10;&#10;(No judgment. This is your safe space.)"
-        maxlength="1000"
+        placeholder="Write freely... no rules, no judgment.&#10;&#10;This is your space. Talk about your day, your feelings, a random thought, a win, a struggle — anything."
+        maxlength="2000"
       ></textarea>
       <div class="journal-footer">
-        <span class="word-count" id="wordCount">0 / 1000</span>
-        <button class="journal-save-btn" onclick="saveJournalEntry()">Save Entry ✦</button>
+        <span class="word-count" id="wordCount">0 / 2000</span>
+        <button class="journal-save-btn" onclick="saveJournalEntry()">Save to diary</button>
       </div>
     </div>
 
     <!-- Past entries -->
-    <div class="section-title">Past Entries</div>
+    <div class="section-title">Your diary</div>
     <div id="journalList">
       <div class="journal-entry-card">
         <div class="journal-entry-header">
           <span class="journal-entry-mood">😄</span>
           <span class="journal-entry-date">Yesterday</span>
-          <span class="journal-entry-xp">+10 XP</span>
         </div>
-        <p class="journal-entry-text">Had a really solid focus session today. Karu leveled up which made me so happy!! Fitch is still ahead but I'm catching up 😤</p>
+        <p class="journal-entry-text">Had a really solid focus session today. Karu leveled up which made me so happy!! Fitch is still ahead but I'm catching up.</p>
       </div>
       <div class="journal-entry-card">
         <div class="journal-entry-header">
           <span class="journal-entry-mood">😌</span>
           <span class="journal-entry-date">2 days ago</span>
-          <span class="journal-entry-xp">+10 XP</span>
         </div>
         <p class="journal-entry-text">Slow day. Didn't finish all my quests but I'm being kind to myself about it. Tomorrow is a new day.</p>
       </div>
