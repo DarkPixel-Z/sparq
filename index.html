@@ -284,15 +284,24 @@
       </div>
     </div>
 
-    <div class="section-title">Sparq Feed</div>
+    <div class="section-title">
+      Sparq Feed
+      <button class="feed-safety-btn" onclick="showSafetyInfo()">🛡️ Safety</button>
+    </div>
 
-    <div class="community-card">
+    <div class="community-card" id="post-1">
       <div class="community-user">
         <div class="user-avatar" style="background: linear-gradient(135deg,#7C5CFC,#FF5FA0)">🐼</div>
         <div>
-          <div class="user-name">Sarah_ADHD</div>
+          <div class="user-name">Sarah_ADHD <span class="verified-badge" title="Verified member">✦</span></div>
           <div class="user-streak">🔥 12 day streak</div>
         </div>
+        <button class="post-menu-btn" onclick="togglePostMenu('post-1')" aria-label="Post options">⋯</button>
+      </div>
+      <div class="post-menu" id="menu-post-1">
+        <button onclick="reportPostById('post-1')">🚩 Report</button>
+        <button onclick="blockUser('post-1','Sarah_ADHD')">🚫 Block user</button>
+        <button onclick="hidePost('post-1')">👁️ Hide post</button>
       </div>
       <div class="community-message">Finally finished my focus session without getting distracted!! 🥳 Karu is SO happy rn. This app is actually helping my brain.</div>
       <div class="community-actions">
@@ -301,13 +310,19 @@
         <button class="comm-btn">✨ Cheer</button>
       </div>
     </div>
-    <div class="community-card">
+    <div class="community-card" id="post-2">
       <div class="community-user">
         <div class="user-avatar" style="background: linear-gradient(135deg,#00D4AA,#4D96FF)">🦁</div>
         <div>
-          <div class="user-name">JamieNeurodiv</div>
+          <div class="user-name">JamieNeurodiv <span class="verified-badge" title="Verified member">✦</span></div>
           <div class="user-streak">🔥 5 day streak</div>
         </div>
+        <button class="post-menu-btn" onclick="togglePostMenu('post-2')" aria-label="Post options">⋯</button>
+      </div>
+      <div class="post-menu" id="menu-post-2">
+        <button onclick="reportPostById('post-2')">🚩 Report</button>
+        <button onclick="blockUser('post-2','JamieNeurodiv')">🚫 Block user</button>
+        <button onclick="hidePost('post-2')">👁️ Hide post</button>
       </div>
       <div class="community-message">Tip for fellow ADHDers: body doubling with this community ACTUALLY works. Just tell the feed you're starting a task and boom — accountability!</div>
       <div class="community-actions">
@@ -316,13 +331,19 @@
         <button class="comm-btn">✨ Cheer</button>
       </div>
     </div>
-    <div class="community-card">
+    <div class="community-card" id="post-3">
       <div class="community-user">
         <div class="user-avatar" style="background: linear-gradient(135deg,#FFD93D,#FF7849)">🐻</div>
         <div>
           <div class="user-name">MxThinksDiffr</div>
           <div class="user-streak">⚡ 55 XP today</div>
         </div>
+        <button class="post-menu-btn" onclick="togglePostMenu('post-3')" aria-label="Post options">⋯</button>
+      </div>
+      <div class="post-menu" id="menu-post-3">
+        <button onclick="reportPostById('post-3')">🚩 Report</button>
+        <button onclick="blockUser('post-3','MxThinksDiffr')">🚫 Block user</button>
+        <button onclick="hidePost('post-3')">👁️ Hide post</button>
       </div>
       <div class="community-message">Week 3 of using Sparq. My red panda Karu is level 7 now 😭 Never thought a virtual panda would make me want to drink water but here we are 💧</div>
       <div class="community-actions">
@@ -394,8 +415,87 @@
       <div class="settings-text"><h4>Share Sparq</h4><p>Tell your people about it</p></div>
       <span class="settings-arrow">›</span>
     </div>
+
+    <div class="section-title" style="margin-top:1.2rem">Safety &amp; Privacy 🛡️</div>
+
+    <div class="safety-setting-row">
+      <div class="settings-icon" style="background:rgba(0,212,170,0.12)">👁️</div>
+      <div class="settings-text"><h4>Private Mode</h4><p>Hide profile from community search</p></div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="privateMode" onchange="saveSafetySetting('privateMode',this.checked)">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+
+    <div class="safety-setting-row">
+      <div class="settings-icon" style="background:rgba(255,106,0,0.12)">🔒</div>
+      <div class="settings-text"><h4>Safe DMs Only</h4><p>Only friends can message you</p></div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="safeDMs" checked onchange="saveSafetySetting('safeDMs',this.checked)">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+
+    <div class="safety-setting-row">
+      <div class="settings-icon" style="background:rgba(124,92,252,0.12)">👶</div>
+      <div class="settings-text"><h4>Under 13 Mode</h4><p>Parental consent &amp; extra filters</p></div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="under13Mode" onchange="saveSafetySetting('under13',this.checked)">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+
+    <div class="safety-setting-row">
+      <div class="settings-icon" style="background:rgba(255,61,154,0.12)">🤬</div>
+      <div class="settings-text"><h4>Content Filter</h4><p>Auto-hide posts with harmful words</p></div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="contentFilter" checked onchange="saveSafetySetting('contentFilter',this.checked)">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+
+    <button class="blocked-list-btn" onclick="showBlockedList()">🚫 View Blocked Users</button>
+
   </div>
 
+</div>
+
+<!-- ── SAFETY MODAL ───────────────────────────────────────────────────────── -->
+<div class="safety-overlay" id="safetyModal" role="dialog" aria-modal="true" aria-label="Community Safety">
+  <div class="safety-card">
+    <div class="safety-icon">🛡️</div>
+    <h2 class="safety-title">Safe Space Rules</h2>
+    <p class="safety-subtitle">Sparq is a neurodivergent-first community. Keep it kind.</p>
+    <ul class="safety-rules">
+      <li>🚫 No sharing personal info (phone, address, school)</li>
+      <li>🚫 No asking others to DM / meet offline</li>
+      <li>🚫 No hate speech, harassment, or bullying</li>
+      <li>✅ Be supportive — we all fight invisible battles</li>
+      <li>✅ Use Report if anything feels wrong — no shame</li>
+    </ul>
+    <div class="safety-age-row">
+      <span class="safety-age-badge">🔞 13+</span>
+      <span class="safety-age-text">Under 13? A parent or guardian must set up your account.</span>
+    </div>
+    <button class="safety-agree-btn" onclick="agreeSafety()">I Understand — Enter Feed ✦</button>
+    <button class="safety-back-btn" onclick="switchPage('home')">← Back to Home</button>
+  </div>
+</div>
+
+<!-- ── REPORT MODAL ────────────────────────────────────────────────────────── -->
+<div class="report-overlay" id="reportModal" role="dialog" aria-modal="true" aria-label="Report Post">
+  <div class="report-card">
+    <div class="report-title">🚩 Report Post</div>
+    <p class="report-sub">Select a reason — our team reviews all reports within 24 h.</p>
+    <div class="report-options">
+      <button class="report-opt" onclick="submitReport(this)">Inappropriate content</button>
+      <button class="report-opt" onclick="submitReport(this)">Asking for personal info</button>
+      <button class="report-opt" onclick="submitReport(this)">Bullying or harassment</button>
+      <button class="report-opt" onclick="submitReport(this)">Spam or self-promotion</button>
+      <button class="report-opt" onclick="submitReport(this)">Predatory / grooming behaviour</button>
+    </div>
+    <button class="report-cancel-btn" onclick="closeReport()">Cancel</button>
+  </div>
 </div>
 
 <!-- FAB -->

@@ -196,6 +196,7 @@ function switchPage(page) {
   document.getElementById('page-' + page).classList.add('active');
   document.getElementById('nav-' + page).classList.add('active');
   document.getElementById('fab').className = (page === 'home') ? 'fab' : 'fab fab-hidden';
+  if (page === 'community') showCommunityPage();
 }
 
 // ─── XP popup ─────────────────────────────────────────────────────────────────
@@ -334,6 +335,112 @@ function selectMood(btn) {
 
 // ─── Toggle reminder ──────────────────────────────────────────────────────────
 function toggleReminder(el) { el.classList.toggle('off'); }
+
+// ─── Safety: content filter wordlist ─────────────────────────────────────────
+const BLOCKED_WORDS = [
+  'address','phone number','snap','snapchat','discord server','whatsapp','meet up',
+  'meet irl','private chat','dm me','kik','telegram','signal me','send pics',
+  'how old are you','what school','what grade','you alone','don\'t tell',
+  'keep this between us','our secret'
+];
+
+function containsBlockedContent(text) {
+  const lower = text.toLowerCase();
+  return BLOCKED_WORDS.some(w => lower.includes(w));
+}
+
+// ─── Safety: modal + community gate ──────────────────────────────────────────
+function showCommunityPage() {
+  const agreed = localStorage.getItem('sparq_safety_agreed');
+  if (!agreed) {
+    document.getElementById('safetyModal').classList.add('show');
+  }
+}
+
+function agreeSafety() {
+  localStorage.setItem('sparq_safety_agreed', '1');
+  document.getElementById('safetyModal').classList.remove('show');
+}
+
+function showSafetyInfo() {
+  document.getElementById('safetyModal').classList.add('show');
+}
+
+// ─── Safety: report ──────────────────────────────────────────────────────────
+let _reportingPostId = null;
+
+function reportPostById(postId) {
+  _reportingPostId = postId;
+  closeAllPostMenus();
+  document.getElementById('reportModal').classList.add('show');
+}
+
+function submitReport(btn) {
+  const reason = btn.textContent;
+  if (_reportingPostId) hidePost(_reportingPostId);
+  document.getElementById('reportModal').classList.remove('show');
+  showPopup('🛡️ Reported — thank you for keeping Sparq safe.');
+  _reportingPostId = null;
+}
+
+function closeReport() {
+  document.getElementById('reportModal').classList.remove('show');
+  _reportingPostId = null;
+}
+
+// ─── Safety: block / hide ────────────────────────────────────────────────────
+function blockUser(postId, username) {
+  closeAllPostMenus();
+  const blocked = JSON.parse(localStorage.getItem('sparq_blocked') || '[]');
+  if (!blocked.includes(username)) {
+    blocked.push(username);
+    localStorage.setItem('sparq_blocked', JSON.stringify(blocked));
+  }
+  hidePost(postId);
+  showPopup(`🚫 ${escapeHtml(username)} blocked.`);
+}
+
+function hidePost(postId) {
+  const el = document.getElementById(postId);
+  if (el) { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+  document.getElementById('reportModal').classList.remove('show');
+}
+
+function showBlockedList() {
+  const blocked = JSON.parse(localStorage.getItem('sparq_blocked') || '[]');
+  if (!blocked.length) { showPopup('No blocked users yet ✦'); return; }
+  alert('Blocked users:\n' + blocked.join('\n'));
+}
+
+// ─── Safety: post menu toggle ─────────────────────────────────────────────────
+function togglePostMenu(postId) {
+  closeAllPostMenus();
+  const menu = document.getElementById('menu-' + postId);
+  if (menu) menu.classList.toggle('show');
+}
+
+function closeAllPostMenus() {
+  document.querySelectorAll('.post-menu.show').forEach(m => m.classList.remove('show'));
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.post-menu-btn') && !e.target.closest('.post-menu'))
+    closeAllPostMenus();
+});
+
+// ─── Safety: settings toggles ────────────────────────────────────────────────
+function saveSafetySetting(key, value) {
+  const settings = JSON.parse(localStorage.getItem('sparq_safety_settings') || '{}');
+  settings[key] = value;
+  localStorage.setItem('sparq_safety_settings', JSON.stringify(settings));
+  const msgs = {
+    privateMode: value ? '👁️ Profile hidden from search.' : '👁️ Profile is now public.',
+    safeDMs:     value ? '🔒 Safe DMs on.' : '🔒 Anyone can message you now.',
+    under13:     value ? '👶 Under 13 mode enabled.' : '👶 Under 13 mode off.',
+    contentFilter: value ? '🤬 Content filter on.' : '🤬 Content filter disabled.',
+  };
+  showPopup(msgs[key] || 'Setting saved.');
+}
 
 // ─── Like post ────────────────────────────────────────────────────────────────
 function likePost(btn) {
