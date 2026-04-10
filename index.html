@@ -284,16 +284,13 @@
       </div>
     </div>
 
-    <div class="section-title">
-      Sparq Feed
-      <button class="feed-safety-btn" onclick="showSafetyInfo()">🛡️ Safety</button>
-    </div>
+    <div class="section-title">Sparq Feed</div>
 
     <div class="community-card" id="post-1">
       <div class="community-user">
         <div class="user-avatar" style="background: linear-gradient(135deg,#7C5CFC,#FF5FA0)">🐼</div>
         <div>
-          <div class="user-name">Sarah_ADHD <span class="verified-badge" title="Verified member">✦</span></div>
+          <div class="user-name">Sarah_ADHD</div>
           <div class="user-streak">🔥 12 day streak</div>
         </div>
         <button class="post-menu-btn" onclick="togglePostMenu('post-1')" aria-label="Post options">⋯</button>
@@ -314,7 +311,7 @@
       <div class="community-user">
         <div class="user-avatar" style="background: linear-gradient(135deg,#00D4AA,#4D96FF)">🦁</div>
         <div>
-          <div class="user-name">JamieNeurodiv <span class="verified-badge" title="Verified member">✦</span></div>
+          <div class="user-name">JamieNeurodiv</div>
           <div class="user-streak">🔥 5 day streak</div>
         </div>
         <button class="post-menu-btn" onclick="togglePostMenu('post-2')" aria-label="Post options">⋯</button>
@@ -416,45 +413,11 @@
       <span class="settings-arrow">›</span>
     </div>
 
-    <div class="section-title" style="margin-top:1.2rem">Safety &amp; Privacy 🛡️</div>
-
-    <div class="safety-setting-row">
-      <div class="settings-icon" style="background:rgba(0,212,170,0.12)">👁️</div>
-      <div class="settings-text"><h4>Private Mode</h4><p>Hide profile from community search</p></div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="privateMode" onchange="saveSafetySetting('privateMode',this.checked)">
-        <span class="toggle-track"></span>
-      </label>
+    <div class="settings-item" onclick="showSafetyInfo()">
+      <div class="settings-icon" style="background:rgba(0,212,170,0.12)">🛡️</div>
+      <div class="settings-text"><h4>Safety &amp; Privacy</h4><p>Content filter, privacy, blocked users</p></div>
+      <span class="settings-arrow">›</span>
     </div>
-
-    <div class="safety-setting-row">
-      <div class="settings-icon" style="background:rgba(255,106,0,0.12)">🔒</div>
-      <div class="settings-text"><h4>Safe DMs Only</h4><p>Only friends can message you</p></div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="safeDMs" checked onchange="saveSafetySetting('safeDMs',this.checked)">
-        <span class="toggle-track"></span>
-      </label>
-    </div>
-
-    <div class="safety-setting-row">
-      <div class="settings-icon" style="background:rgba(124,92,252,0.12)">👶</div>
-      <div class="settings-text"><h4>Under 13 Mode</h4><p>Parental consent &amp; extra filters</p></div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="under13Mode" onchange="saveSafetySetting('under13',this.checked)">
-        <span class="toggle-track"></span>
-      </label>
-    </div>
-
-    <div class="safety-setting-row">
-      <div class="settings-icon" style="background:rgba(255,61,154,0.12)">🤬</div>
-      <div class="settings-text"><h4>Content Filter</h4><p>Auto-hide posts with harmful words</p></div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="contentFilter" checked onchange="saveSafetySetting('contentFilter',this.checked)">
-        <span class="toggle-track"></span>
-      </label>
-    </div>
-
-    <button class="blocked-list-btn" onclick="showBlockedList()">🚫 View Blocked Users</button>
 
   </div>
 
@@ -477,8 +440,23 @@
       <span class="safety-age-badge">🔞 13+</span>
       <span class="safety-age-text">Under 13? A parent or guardian must set up your account.</span>
     </div>
-    <button class="safety-agree-btn" onclick="agreeSafety()">I Understand — Enter Feed ✦</button>
-    <button class="safety-back-btn" onclick="switchPage('home')">← Back to Home</button>
+    <div class="safety-toggles">
+      <label class="safety-toggle-row">
+        <span>👁️ Private Mode</span>
+        <label class="toggle-switch"><input type="checkbox" id="privateMode" onchange="saveSafetySetting('privateMode',this.checked)"><span class="toggle-track"></span></label>
+      </label>
+      <label class="safety-toggle-row">
+        <span>🔒 Safe DMs Only</span>
+        <label class="toggle-switch"><input type="checkbox" id="safeDMs" checked onchange="saveSafetySetting('safeDMs',this.checked)"><span class="toggle-track"></span></label>
+      </label>
+      <label class="safety-toggle-row">
+        <span>🤬 Content Filter</span>
+        <label class="toggle-switch"><input type="checkbox" id="contentFilter" checked onchange="saveSafetySetting('contentFilter',this.checked)"><span class="toggle-track"></span></label>
+      </label>
+      <button class="safety-blocked-mini" onclick="showBlockedList()">🚫 View Blocked Users</button>
+    </div>
+    <button class="safety-agree-btn" onclick="agreeSafety()">Got it ✦</button>
+    <button class="safety-back-btn" onclick="document.getElementById('safetyModal').classList.remove('show')">← Close</button>
   </div>
 </div>
 

@@ -619,7 +619,9 @@ body {
 .toggle-track::before{ content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:white; border-radius:50%; transition:transform .2s; }
 .toggle-switch input:checked + .toggle-track{ background:var(--teal); }
 .toggle-switch input:checked + .toggle-track::before{ transform:translateX(18px); }
-.blocked-list-btn{ display:block; margin:0 16px 20px; width:calc(100% - 32px); padding:13px; background:rgba(255,61,154,0.08); border:1.5px solid rgba(255,61,154,0.25); border-radius:14px; font-size:14px; font-weight:700; color:var(--pink); cursor:pointer; font-family:inherit; }
+.safety-toggles{ margin-bottom:16px; display:flex; flex-direction:column; gap:6px; }
+.safety-toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.04); border-radius:12px; font-size:13px; font-weight:700; color:var(--text); }
+.safety-blocked-mini{ width:100%; margin-top:4px; padding:10px; background:transparent; border:1.5px solid rgba(255,61,154,0.25); border-radius:12px; font-size:13px; font-weight:700; color:var(--pink); cursor:pointer; font-family:inherit; }
 
 /* ── Confetti ────────────────────────────────────────────────────────────── */
 .confetti-piece{ position:fixed; width:9px; height:9px; border-radius:2px; pointer-events:none; z-index:1000; animation:confettiFall 1s ease-in forwards; }
