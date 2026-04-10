@@ -12,7 +12,7 @@
 <div class="xp-popup" id="xpPopup">⚡ +XP!</div>
 
 <!-- Achievement toast -->
-<div class="achievement-toast" id="achievementToast">
+<div class="achievement-toast" id="achievementToast" style="right:-320px;position:fixed;top:70px;z-index:998">
   <span class="ach-icon" id="achIcon">🌟</span>
   <div class="ach-body">
     <div class="ach-title">Achievement Unlocked!</div>
@@ -23,7 +23,7 @@
 </div>
 
 <!-- Level-up modal -->
-<div class="levelup-overlay" id="levelUpModal">
+<div class="levelup-overlay" id="levelUpModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center">
   <div class="levelup-card">
     <div class="levelup-burst">✦</div>
     <div class="levelup-karu">
@@ -424,7 +424,7 @@
 </div>
 
 <!-- ── SAFETY MODAL ───────────────────────────────────────────────────────── -->
-<div class="safety-overlay" id="safetyModal" role="dialog" aria-modal="true" aria-label="Community Safety">
+<div class="safety-overlay" id="safetyModal" role="dialog" aria-modal="true" aria-label="Community Safety" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
   <div class="safety-card">
     <div class="safety-icon">🛡️</div>
     <h2 class="safety-title">Safe Space Rules</h2>
@@ -456,12 +456,12 @@
       <button class="safety-blocked-mini" onclick="showBlockedList()">🚫 View Blocked Users</button>
     </div>
     <button class="safety-agree-btn" onclick="agreeSafety()">Got it ✦</button>
-    <button class="safety-back-btn" onclick="document.getElementById('safetyModal').classList.remove('show')">← Close</button>
+    <button class="safety-back-btn" onclick="hideOverlay('safetyModal')">← Close</button>
   </div>
 </div>
 
 <!-- ── REPORT MODAL ────────────────────────────────────────────────────────── -->
-<div class="report-overlay" id="reportModal" role="dialog" aria-modal="true" aria-label="Report Post">
+<div class="report-overlay" id="reportModal" role="dialog" aria-modal="true" aria-label="Report Post" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
   <div class="report-card">
     <div class="report-title">🚩 Report Post</div>
     <p class="report-sub">Select a reason — our team reviews all reports within 24 h.</p>

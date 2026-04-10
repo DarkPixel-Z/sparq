@@ -101,13 +101,18 @@ function showLevelUpModal(lvl) {
   else if (lvl === 15) evoEl.textContent = '🌙 Karu is LEGENDARY now!';
   else                 evoEl.textContent = '';
 
+  modal.style.opacity = '1';
+  modal.style.pointerEvents = 'all';
   modal.classList.add('show');
   launchConfetti();
   updatePetEvolution();
 }
 
 function closeLevelUp() {
-  document.getElementById('levelUpModal').classList.remove('show');
+  const m = document.getElementById('levelUpModal');
+  m.style.opacity = '0';
+  m.style.pointerEvents = 'none';
+  m.classList.remove('show');
 }
 
 // ─── Pet evolution visual ─────────────────────────────────────────────────────
@@ -146,8 +151,9 @@ function showAchievementToast(ach) {
   document.getElementById('achName').textContent  = ach.name;
   document.getElementById('achDesc').textContent  = ach.desc;
   document.getElementById('achXP').textContent    = `+${ach.xp} XP`;
+  toast.style.right = '16px';
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 3500);
+  setTimeout(() => { toast.style.right = '-320px'; toast.classList.remove('show'); }, 3500);
 }
 
 // ─── Stars ────────────────────────────────────────────────────────────────────
@@ -350,20 +356,31 @@ function containsBlockedContent(text) {
 }
 
 // ─── Safety: modal + community gate ──────────────────────────────────────────
+function showOverlay(id) {
+  const el = document.getElementById(id);
+  el.style.opacity = '1';
+  el.style.pointerEvents = 'all';
+  el.classList.add('show');
+}
+function hideOverlay(id) {
+  const el = document.getElementById(id);
+  el.style.opacity = '0';
+  el.style.pointerEvents = 'none';
+  el.classList.remove('show');
+}
+
 function showCommunityPage() {
   const agreed = localStorage.getItem('sparq_safety_agreed');
-  if (!agreed) {
-    document.getElementById('safetyModal').classList.add('show');
-  }
+  if (!agreed) showOverlay('safetyModal');
 }
 
 function agreeSafety() {
   localStorage.setItem('sparq_safety_agreed', '1');
-  document.getElementById('safetyModal').classList.remove('show');
+  hideOverlay('safetyModal');
 }
 
 function showSafetyInfo() {
-  document.getElementById('safetyModal').classList.add('show');
+  showOverlay('safetyModal');
 }
 
 // ─── Safety: report ──────────────────────────────────────────────────────────
@@ -372,19 +389,19 @@ let _reportingPostId = null;
 function reportPostById(postId) {
   _reportingPostId = postId;
   closeAllPostMenus();
-  document.getElementById('reportModal').classList.add('show');
+  showOverlay('reportModal');
 }
 
 function submitReport(btn) {
   const reason = btn.textContent;
   if (_reportingPostId) hidePost(_reportingPostId);
-  document.getElementById('reportModal').classList.remove('show');
+  hideOverlay('reportModal');
   showPopup('🛡️ Reported — thank you for keeping Sparq safe.');
   _reportingPostId = null;
 }
 
 function closeReport() {
-  document.getElementById('reportModal').classList.remove('show');
+  hideOverlay('reportModal');
   _reportingPostId = null;
 }
 
@@ -403,7 +420,7 @@ function blockUser(postId, username) {
 function hidePost(postId) {
   const el = document.getElementById(postId);
   if (el) { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
-  document.getElementById('reportModal').classList.remove('show');
+  hideOverlay('reportModal');
 }
 
 function showBlockedList() {
