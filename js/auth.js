@@ -1,15 +1,6 @@
 // ─── Firebase Config ──────────────────────────────────────────────────────────
-// Replace with your Firebase project config from:
-// Firebase Console → Project Settings → Your apps → Config
-const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "000000000000",
-  appId:             "YOUR_APP_ID"
-};
-
+// Config loaded from js/firebase-config.js (gitignored)
+// See js/firebase-config.example.js for the template
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
