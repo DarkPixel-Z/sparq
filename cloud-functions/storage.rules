@@ -1,0 +1,32 @@
+// Firebase Storage rules for Sparq avatar moderation (Path B).
+// Deploy: firebase deploy --only storage:rules
+//
+// Rules summary:
+//   - avatars/{uid}/pending/* — write by owner, read by owner + Cloud Function only
+//   - avatars/{uid}/approved/* — public read, write blocked (only the Function writes)
+//   - All other paths — denied
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Pending uploads: owner only, with size + content-type guards.
+    match /avatars/{userId}/pending/{filename} {
+      allow read:  if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.size < 5 * 1024 * 1024
+                    && request.resource.contentType.matches('image/(png|jpe?g)');
+    }
+
+    // Approved: public read; client write disallowed (Cloud Function copies it here).
+    match /avatars/{userId}/approved/{filename} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Default deny.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

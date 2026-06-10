@@ -1,0 +1,22 @@
+// Firestore rules for Sparq avatar moderation (Path B).
+// Deploy: firebase deploy --only firestore:rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users root: each user can read/write their own profile.
+    // The denormalized avatarUrl field is publicly readable so leaderboards
+    // and friend lists can show approved avatars without per-user subreads.
+    match /users/{userId} {
+      allow read:   if true;          // public profile (level, name, avatarUrl)
+      allow write:  if request.auth != null && request.auth.uid == userId;
+
+      // Moderation subcollection: owner can READ to learn state of their upload.
+      // Only Cloud Functions can WRITE (service account has admin bypass).
+      match /avatarModeration/{doc} {
+        allow read:  if request.auth != null && request.auth.uid == userId;
+        allow write: if false;        // Cloud Function service account bypasses this
+      }
+    }
+  }
+}

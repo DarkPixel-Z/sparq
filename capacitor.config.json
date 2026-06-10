@@ -1,7 +1,7 @@
 {
   "appId": "com.sparq.adhd",
   "appName": "Sparq",
-  "webDir": ".",
+  "webDir": "dist",
   "server": {
     "androidScheme": "https"
   },

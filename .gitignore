@@ -4,3 +4,76 @@ Thumbs.db
 node_modules/
 .env
 js/firebase-config.js
+android/app/google-services.json
+
+# Capacitor build output
+dist/
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+android/local.properties
+android/captures/
+
+# Unity — generated caches, build output, IDE files
+unity/[Ll]ibrary/
+unity/[Tt]emp/
+unity/[Oo]bj/
+unity/[Bb]uild/
+unity/[Bb]uilds/
+unity/[Ll]ogs/
+unity/[Uu]ser[Ss]ettings/
+unity/MemoryCaptures/
+unity/Recordings/
+unity/.utmp/
+unity/_Parked/
+unity/*.csproj
+unity/*.sln
+unity/*.unityproj
+unity/*.suo
+unity/*.user
+unity/*.userprefs
+unity/*.pidb
+unity/*.booproj
+unity/*.svd
+unity/*.pdb
+unity/*.mdb
+unity/*.opendb
+unity/*.VC.db
+unity/.vs/
+unity/.vsconfig
+unity/sysinfo.txt
+unity/*.apk
+unity/*.aab
+unity/*.unitypackage
+unity/*.app
+unity/crashlytics-build.properties
+
+# Unity — Assets whitelist
+# Third-party Unity Asset Store imports (BattleOfHeroes, SpartanWarriors,
+# Layer Lab, Feel, Action RPG Music, etc.) total ~15GB and are reimported
+# by collaborators directly from the Asset Store. Whitelist only the
+# custom + curated folders the project authored or actively curates.
+unity/Assets/*
+!unity/Assets/Scripts/
+!unity/Assets/Scripts.meta
+!unity/Assets/Resources/
+!unity/Assets/Resources.meta
+!unity/Assets/Scene/
+!unity/Assets/Scene.meta
+!unity/Assets/Prefabs/
+!unity/Assets/Prefabs.meta
+!unity/Assets/Editor/
+!unity/Assets/Editor.meta
+!unity/Assets/Plugins/
+!unity/Assets/Plugins.meta
+!unity/Assets/Art/
+!unity/Assets/Art.meta
+!unity/Assets/Audio/
+!unity/Assets/Audio.meta
+!unity/Assets/Fonts/
+!unity/Assets/Fonts.meta
+!unity/Assets/Tilemap/
+!unity/Assets/Tilemap.meta
+!unity/Assets/_TXT/
+!unity/Assets/_TXT.meta

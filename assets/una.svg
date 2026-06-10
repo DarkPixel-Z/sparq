@@ -1,0 +1,68 @@
+<svg viewBox="0 0 140 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Una the Axolotl — gills fan out BIG on all sides to read clearly at small size -->
+
+  <!-- Shadow -->
+  <ellipse cx="70" cy="138" rx="42" ry="4" fill="rgba(0,0,0,0.28)"/>
+
+  <!-- Tail -->
+  <path d="M 100 100 Q 128 94 132 115 Q 122 122 100 112 Z" fill="#FFB0D5" stroke="#C04688" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- ── BODY (saturated pink) ────────────────────────────────────────── -->
+  <ellipse cx="70" cy="108" rx="34" ry="20" fill="#FFA8D0" stroke="#C04688" stroke-width="2.5"/>
+  <!-- Belly highlight -->
+  <ellipse cx="70" cy="114" rx="22" ry="9" fill="#FFCFE4" opacity="0.75"/>
+  <!-- Feet -->
+  <ellipse cx="44" cy="123" rx="7" ry="5" fill="#FFA8D0" stroke="#C04688" stroke-width="2"/>
+  <ellipse cx="96" cy="123" rx="7" ry="5" fill="#FFA8D0" stroke="#C04688" stroke-width="2"/>
+
+  <!-- ── TOP GILLS (above head — makes axolotl identity clear) ────────── -->
+  <g fill="#E6007A" stroke="#9B0053" stroke-width="1.8" stroke-linejoin="round">
+    <!-- Top-left tuft -->
+    <path d="M 48 42 Q 38 14 32 8 Q 36 22 42 26 Q 28 22 22 20 Q 34 32 44 34 Q 34 36 30 44 Q 42 40 50 46 Z"/>
+    <!-- Top-right tuft -->
+    <path d="M 92 42 Q 102 14 108 8 Q 104 22 98 26 Q 112 22 118 20 Q 106 32 96 34 Q 106 36 110 44 Q 98 40 90 46 Z"/>
+  </g>
+  <g stroke="#FF8AC6" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.9">
+    <path d="M 36 18 L 32 10 M 42 28 L 34 28 M 46 38 L 36 42"/>
+    <path d="M 104 18 L 108 10 M 98 28 L 106 28 M 94 38 L 104 42"/>
+  </g>
+
+  <!-- ── SIDE GILLS (left, 2 big tufts) ─────────────────────────────── -->
+  <g fill="#E6007A" stroke="#9B0053" stroke-width="1.8" stroke-linejoin="round">
+    <path d="M 38 62 Q 14 54 4 66 Q 16 60 26 70 Q 10 66 2 82 Q 18 74 32 78 Q 40 72 38 62 Z"/>
+    <path d="M 38 84 Q 12 82 2 96 Q 18 90 30 94 Q 18 98 14 108 Q 28 100 40 98 Q 44 92 38 84 Z"/>
+  </g>
+  <g stroke="#FF8AC6" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.9">
+    <path d="M 24 66 L 12 58 M 20 76 L 8 76 M 30 80 L 18 82"/>
+    <path d="M 24 94 L 10 92 M 24 104 L 16 108"/>
+  </g>
+
+  <!-- ── SIDE GILLS (right, mirrored) ───────────────────────────────── -->
+  <g fill="#E6007A" stroke="#9B0053" stroke-width="1.8" stroke-linejoin="round">
+    <path d="M 102 62 Q 126 54 136 66 Q 124 60 114 70 Q 130 66 138 82 Q 122 74 108 78 Q 100 72 102 62 Z"/>
+    <path d="M 102 84 Q 128 82 138 96 Q 122 90 110 94 Q 122 98 126 108 Q 112 100 100 98 Q 96 92 102 84 Z"/>
+  </g>
+  <g stroke="#FF8AC6" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.9">
+    <path d="M 116 66 L 128 58 M 120 76 L 132 76 M 110 80 L 122 82"/>
+    <path d="M 116 94 L 130 92 M 116 104 L 124 108"/>
+  </g>
+
+  <!-- ── HEAD (round, bright pink, drawn AFTER gills so it sits on top) ──── -->
+  <ellipse cx="70" cy="70" rx="34" ry="30" fill="#FFA8D0" stroke="#C04688" stroke-width="2.5"/>
+  <!-- Soft highlight -->
+  <ellipse cx="56" cy="56" rx="11" ry="7" fill="#FFCFE4" opacity="0.75"/>
+
+  <!-- ── FACE ─────────────────────────────────────────────────────────── -->
+  <!-- Eyes — small black dots -->
+  <circle cx="58" cy="72" r="4" fill="#1A0820"/>
+  <circle cx="82" cy="72" r="4" fill="#1A0820"/>
+  <circle cx="59.5" cy="70.5" r="1.3" fill="white"/>
+  <circle cx="83.5" cy="70.5" r="1.3" fill="white"/>
+
+  <!-- Wide classic axolotl smile -->
+  <path d="M 52 84 Q 70 94 88 84" stroke="#9B0053" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+
+  <!-- Cheek blush -->
+  <ellipse cx="46" cy="82" rx="5" ry="3.5" fill="#FF5AA3" opacity="0.55"/>
+  <ellipse cx="94" cy="82" rx="5" ry="3.5" fill="#FF5AA3" opacity="0.55"/>
+</svg>

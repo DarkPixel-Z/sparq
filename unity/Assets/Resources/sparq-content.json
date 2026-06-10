@@ -1,0 +1,559 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Sparq content seed. Edit copy here, not in code. Quest IDs and achievement IDs must match sparq-quests.ts.",
+    "voice": "Calm, direct, slightly warm, never condescending. Never drill-sergeant. Never toxic-positive."
+  },
+
+  "quests": {
+    "three_second_pause": {
+      "title": "The 3-Second Pause",
+      "description": "Catch yourself once today. Before you react, before you reply, before you tap — pause for three seconds. That's it. One pause counts.",
+      "shortLabel": "Pause once today",
+      "onComplete": "You felt that? That was your brain choosing. Do it again tomorrow.",
+      "streakMessages": {
+        "7": "Seven pauses. You're wiring something.",
+        "30": "Thirty days of finding the gap. That's not a habit anymore.",
+        "90": "Ninety days. The pause is part of you now."
+      }
+    },
+    "phone_off_hour": {
+      "title": "Phone-Off Hour",
+      "description": "One hour. Phone face-down or in another room. Not on silent next to you — actually away.",
+      "shortLabel": "1 hour, phone away",
+      "onComplete": "An hour without the pull. Your attention is yours again.",
+      "streakMessages": {
+        "7": "A whole week of taking your focus back. The fox approves.",
+        "30": "A month of reclaimed hours. That adds up."
+      }
+    },
+    "future_note": {
+      "title": "Future Note",
+      "description": "Write one sentence to yourself one week from now. Anything. A wish, a warning, a reminder, a question.",
+      "shortLabel": "Note to future you",
+      "onComplete": "Future you is going to read that. Wild, right?",
+      "streakMessages": {
+        "7": "Seven notes to seven future selves. Time travel, basically.",
+        "30": "A month of conversations with your future. Most people never have one."
+      }
+    },
+    "hard_thing_first": {
+      "title": "Hard Thing First",
+      "description": "Pick the thing you've been avoiding. Do it before anything fun. Doesn't have to be perfect — just done.",
+      "shortLabel": "Do the hard thing first",
+      "onComplete": "The thing that was getting bigger in your head? Smaller now.",
+      "streakMessages": {
+        "5": "Five days of front-loading the hard stuff. This is the cheat code.",
+        "30": "A month of choosing hard first. You've changed how you start a day."
+      }
+    },
+    "move_20": {
+      "title": "Move 20",
+      "description": "20 minutes of moving. Walk, dance, stretch, lift, run — anything that gets you breathing harder.",
+      "shortLabel": "20 minutes moving",
+      "onComplete": "Brain chemistry just got better. That's not a metaphor.",
+      "streakMessages": {
+        "7": "A week of movement. Your nervous system is thanking you.",
+        "30": "Thirty days. Your body is a different system now."
+      }
+    },
+    "wind_down": {
+      "title": "Wind Down",
+      "description": "Screens off 30 minutes before your target sleep time. Read, stretch, talk, draw, stare at the ceiling — whatever isn't a screen.",
+      "shortLabel": "Screens off 30 min before bed",
+      "onComplete": "Your brain needs the off-ramp. Good job giving it one.",
+      "streakMessages": {
+        "7": "A week of real sleep prep. Tomorrow-you is going to be sharper.",
+        "30": "A month of off-ramps. Sleep is doing what it's supposed to do."
+      }
+    },
+    "two_minute_start": {
+      "title": "Two-Minute Start",
+      "description": "Start the thing for two minutes. That's the whole quest. You're allowed to stop after two minutes. (You probably won't.)",
+      "shortLabel": "Start for 2 minutes",
+      "onComplete": "Starting was the boss fight. You won.",
+      "streakMessages": {
+        "10": "Ten starts. You know the trick now.",
+        "30": "A month of beating the initiation problem. That's huge."
+      }
+    },
+    "sensory_reset": {
+      "title": "Sensory Reset",
+      "description": "Take five minutes in a low-stimulation space. Lights down, sound off, no demands. Reset.",
+      "shortLabel": "5-min sensory reset",
+      "onComplete": "You noticed what you needed and you gave it to yourself. That's the whole skill.",
+      "streakMessages": {
+        "7": "A week of resets. You're learning your own rhythm.",
+        "30": "Thirty resets. You've built a regulation practice."
+      }
+    },
+    "transition_buffer": {
+      "title": "Transition Buffer",
+      "description": "Before switching tasks, take three minutes. Nothing required — just a pause between the old thing and the new thing.",
+      "shortLabel": "3 min between tasks",
+      "onComplete": "You gave your brain the runway. It works better with the runway.",
+      "streakMessages": {
+        "7": "A week of buffers. Transitions are getting smoother."
+      }
+    },
+    "spoon_check": {
+      "title": "Spoon Check",
+      "description": "Quick check-in: low, medium, or high energy today? Your quests will match.",
+      "shortLabel": "Check your energy",
+      "onComplete": "Knowing where you are matters more than pretending.",
+      "streakMessages": {
+        "7": "A week of honest check-ins. You're learning your pattern.",
+        "30": "Thirty days of self-knowledge. The map is forming."
+      }
+    },
+    "hyperfocus_capture": {
+      "title": "Hyperfocus Capture",
+      "description": "Notice when you're in deep focus. Log it. What were you doing? How long? What conditions made it possible?",
+      "shortLabel": "Log a deep-focus session",
+      "onComplete": "You caught the conditions. Now you can recreate them."
+    },
+    "body_doubling": {
+      "title": "Body Doubling",
+      "description": "Do a task with someone else present — in person, on a call, or on a body-doubling app. Their job is just to exist nearby while you work.",
+      "shortLabel": "Work alongside someone",
+      "onComplete": "Other brains in the room. Yours works better with company.",
+      "streakMessages": {
+        "5": "Five doubled sessions. You found something that works.",
+        "15": "Fifteen sessions. Other people are a feature, not a bug."
+      }
+    },
+
+    "skip_the_scroll": {
+      "title": "Skip the Scroll",
+      "description": "Three times this week, when you feel the pull to scroll — don't. Do something else. Anything else. Log it.",
+      "shortLabel": "Skip 3 scroll sessions",
+      "onComplete": "Three times you chose. That's not nothing. That's the muscle."
+    },
+    "show_up": {
+      "title": "Show Up",
+      "description": "Be on time to five things this week. Class, work, meet-ups, calls — anything you said you'd be at.",
+      "shortLabel": "On time to 5 things",
+      "onComplete": "Five for five. That's a reputation forming."
+    },
+    "pause_log": {
+      "title": "The Pause Log",
+      "description": "Catch the pause ten times this week. Tap to log each one. No journaling required — just the count.",
+      "shortLabel": "Log 10 pauses",
+      "onComplete": "Ten pauses logged. That's ten reps for the part of your brain that makes good decisions."
+    },
+    "save_dont_spend": {
+      "title": "Save, Don't Spend",
+      "description": "Skip one impulse purchase this week. Note what it was and what it would've cost. Watch the number add up over time.",
+      "shortLabel": "Skip 1 impulse buy",
+      "onComplete": "Money you still have. Future you is going to notice."
+    },
+    "hard_conversation": {
+      "title": "Hard Conversation",
+      "description": "Have one conversation you've been avoiding. Doesn't have to go perfectly. It just has to happen.",
+      "shortLabel": "Have the conversation",
+      "onComplete": "That thing isn't sitting on your chest anymore. Big deal."
+    },
+
+    "open_sparq": {
+      "title": "Open Sparq",
+      "description": "You're here. That counts.",
+      "shortLabel": "Just show up",
+      "onComplete": "You came back. That's all I needed."
+    },
+
+    "ten_minute_window": {
+      "title": "The 10-Minute Window",
+      "description": "Give the feelings ten minutes. Set a timer. Cry, journal, rage, replay it in your head — whatever. When the timer ends, you go do one other thing. Anything else. The feelings are allowed back tomorrow.",
+      "shortLabel": "10 minutes for the feelings",
+      "onComplete": "You felt it on purpose, then you walked away from it. That's not avoiding. That's running it instead of it running you.",
+      "streakMessages": {
+        "7": "A week of giving the feelings a window. The spiral is getting shorter.",
+        "14": "Two weeks. You've built a real skill here."
+      }
+    },
+    "dont_check": {
+      "title": "Don't Check",
+      "description": "Don't check their socials today. Don't check who liked their post. Don't check who they followed. One day. That's all.",
+      "shortLabel": "No checking today",
+      "onComplete": "One day without feeding the loop. The loop got smaller.",
+      "streakMessages": {
+        "7": "A week of not checking. Your nervous system is starting to come down.",
+        "14": "Two weeks. The pull is weaker now."
+      }
+    },
+    "phone_a_friend": {
+      "title": "Phone-a-Friend",
+      "description": "Reach out to one person who isn't them and isn't a mutual friend of theirs. Text, call, voice note — anything. The point is to remember other people exist.",
+      "shortLabel": "Reach out to someone else",
+      "onComplete": "There are other connections in your life. You just reminded yourself."
+    },
+    "body_before_brain": {
+      "title": "Body Before Brain",
+      "description": "Move your body for 20 minutes before you let yourself think about it. Walk, dance, lift, stretch — anything physical first.",
+      "shortLabel": "Move before you think",
+      "onComplete": "You ran the body first. The brain followed and it had less power."
+    },
+    "one_thing_future_you": {
+      "title": "One Thing for Future You",
+      "description": "Do one small thing today that future-you in three months will be glad you did. Not related to them. Anything else. School, skill, money, sleep, body.",
+      "shortLabel": "One thing for 3-months-from-now you",
+      "onComplete": "You're still building the life you're going to be in. They're not the whole story."
+    },
+    "drama_check": {
+      "title": "The Drama Check",
+      "description": "Notice once today when you almost got pulled into someone else's drama — gossip, a fight, a group chat pile-on. Notice it. You don't have to walk away. Just notice.",
+      "shortLabel": "Notice the pull",
+      "onComplete": "Noticing is the whole skill. The walking-away part gets easier later."
+    },
+    "no_contact_week": {
+      "title": "The No-Contact Week",
+      "description": "Seven days, no contact. No texts, no replies, no 'just one thing.' If they reach out, you don't respond. If you want to reach out, you don't. One week.",
+      "shortLabel": "7 days no contact",
+      "onComplete": "Seven days of not feeding it. The signal is getting quieter."
+    },
+    "inventory": {
+      "title": "Inventory",
+      "description": "List five things about your life right now that have nothing to do with them. Not 'things I'll do without them' — just five things that are yours.",
+      "shortLabel": "5 things that are yours",
+      "onComplete": "Your life has more in it than the part that hurts right now. You just proved it."
+    },
+    "three_hard_things": {
+      "title": "Three Hard Things",
+      "description": "Three things this week that you've been putting off because of the breakup fog. Doesn't matter how small. Just three.",
+      "shortLabel": "3 things off the pile",
+      "onComplete": "Three things off the pile. The fog lifts when you move through it, not when you wait it out."
+    },
+
+    "side_step": {
+      "title": "The Side Step",
+      "description": "Someone tried to pull you into drama today and you sidestepped it. Walked away from the group chat, didn't take the bait, changed the subject. Log it.",
+      "shortLabel": "Sidestep the drama",
+      "onComplete": "Drama needs participants. You didn't sign up.",
+      "streakMessages": {
+        "7": "A week of stepping around it. Less of your energy is going to other people's chaos.",
+        "30": "Thirty days. Your peace is a real thing now."
+      }
+    },
+    "mind_your_own": {
+      "title": "Mind Your Own",
+      "description": "One full day of not commenting on, gossiping about, or weighing in on someone else's situation. Yours is enough.",
+      "shortLabel": "Mind your own today",
+      "onComplete": "Your attention is a resource. You spent it on yourself today.",
+      "streakMessages": {
+        "7": "A week of keeping your focus on you. That's not selfish — that's clarity.",
+        "30": "A month. You've changed where your attention goes."
+      }
+    },
+    "receipt_test": {
+      "title": "The Receipt Test",
+      "description": "Before you say something about someone today, ask: would I say this if they were standing here? If yes, fine. If no, don't.",
+      "shortLabel": "Run the receipt test",
+      "onComplete": "You ran the check. That's a real skill, not everyone has it.",
+      "streakMessages": {
+        "7": "A week of running the test. People can trust you now.",
+        "30": "Thirty days. You're the person other people feel safe around."
+      }
+    },
+
+    "talk_to_someone": {
+      "title": "Talk to Someone",
+      "description": "You've been carrying this for a while. Sometimes the move is talking to a person whose job is to help. A counselor, a therapist, a school support worker, or a crisis line if it's heavier than that. Reach out to one. The quest is done as soon as you reach out — not as soon as you feel better.",
+      "shortLabel": "Reach out to a professional",
+      "onComplete": "Reaching out is the hardest part. You did the hard part."
+    },
+
+    "words_vs_actions": {
+      "title": "Words-vs-Actions Check",
+      "description": "Pick one person in your life today. Notice one thing they said they'd do recently. Did they do it? Just notice. No judgment yet.",
+      "shortLabel": "Did they do what they said?",
+      "onComplete": "Words are cheap. Actions are the receipt. You just read one.",
+      "streakMessages": {
+        "7": "A week of checking receipts. Patterns are getting clearer.",
+        "30": "Thirty days of reading actions instead of words. That's how clear-eyed people see the world."
+      }
+    },
+    "cost_check": {
+      "title": "The Cost Check",
+      "description": "Someone asked you for something today. Before saying yes, ask: 'What does this cost me, and is that cost something I want to pay?' Then decide. Either answer is fine.",
+      "shortLabel": "Cost it before you commit",
+      "onComplete": "You ran the math before you committed. That's the move.",
+      "streakMessages": {
+        "7": "A week of running the cost before the yes. Your time and energy are starting to mean something.",
+        "30": "A month. You don't say yes by default anymore."
+      }
+    },
+    "gut_note": {
+      "title": "The Gut Note",
+      "description": "Notice once today when your gut said 'something's off' about a person or situation. Don't act on it yet. Just write down what it was. We're collecting data.",
+      "shortLabel": "Log a gut feeling",
+      "onComplete": "Your gut is a pattern-matcher trained on your whole life. It's not always right, but it's worth listening to."
+    },
+    "receipt_read": {
+      "title": "The Receipt Read",
+      "description": "Think about one promise someone made you in the last month. Did they keep it? Half-keep it? Forget it? Make excuses? Log it.",
+      "shortLabel": "Log one kept or broken promise",
+      "onComplete": "One data point on its own means nothing. A bunch of them means something. You just added one."
+    },
+    "one_question_not_three": {
+      "title": "One Question, Not Three",
+      "description": "When you're about to share something personal today, share less than you want to. One sentence, not a paragraph. See how they handle the small thing before you give them the big thing.",
+      "shortLabel": "Share less than you want to",
+      "onComplete": "You held something back. That's not coldness — that's pacing. Trust gets built in steps.",
+      "streakMessages": {
+        "14": "Two weeks of pacing your disclosure. You're protecting yourself without becoming closed off."
+      }
+    },
+    "pressure_check": {
+      "title": "The Pressure Check",
+      "description": "Did someone today rush you, guilt you, or make you feel weird for taking time to decide? Notice it. Decision rushed = decision worth pausing on.",
+      "shortLabel": "Notice the rush",
+      "onComplete": "Anyone who can't wait for your yes doesn't deserve a fast one.",
+      "streakMessages": {
+        "14": "Two weeks of noticing the rush. Pressure is information. You're reading it now."
+      }
+    },
+    "inner_circle_audit": {
+      "title": "The Inner Circle Audit",
+      "description": "List the people closest to you right now. For each one, ask: have they earned this level of closeness through their actions? Don't change anything yet. Just look.",
+      "shortLabel": "Audit your inner circle",
+      "onComplete": "You looked at your own circle on purpose. Most people don't. That's a real skill."
+    },
+    "the_no_mission": {
+      "title": "The 'No' Mission",
+      "description": "Say no to one thing this week that you would normally have said yes to out of habit, guilt, or wanting to be liked. Doesn't have to be a big thing. Just one.",
+      "shortLabel": "One no this week",
+      "onComplete": "One no. The world didn't end. The relationship didn't end. You're allowed to do that."
+    },
+    "thirty_day_pattern": {
+      "title": "The 30-Day Pattern",
+      "description": "Pick one person you've been unsure about. For 30 days, just observe. Don't trust them more, don't trust them less. Watch what they actually do. Then decide.",
+      "shortLabel": "30 days of observation",
+      "onComplete": "Thirty days of evidence. That's a real basis for a real decision."
+    }
+  },
+
+  "achievements": {
+    "event_horizon": {
+      "title": "Event Horizon",
+      "unlockCondition": "First logged pause",
+      "unlockCopy": "The smallest gap in the world. Between the thing that happened and the thing you did about it. You just found it."
+    },
+    "slow_light": {
+      "title": "Slow Light",
+      "unlockCondition": "Complete a 30+ day goal",
+      "unlockCopy": "Light from far-away stars takes years to reach us. Some things are worth the wait. You stayed with this one."
+    },
+    "orbit_lock": {
+      "title": "Orbit Lock",
+      "unlockCondition": "30-day streak on any daily quest",
+      "unlockCopy": "Thirty days in orbit. This isn't a habit anymore. It's part of how you move."
+    },
+    "dark_matter": {
+      "title": "Dark Matter",
+      "unlockCondition": "7 consecutive nights hitting sleep window",
+      "unlockCopy": "Invisible work. Nobody sees the sleep, but everything else gets better because of it."
+    },
+    "nebula": {
+      "title": "Nebula",
+      "unlockCondition": "50 reflection entries logged",
+      "unlockCopy": "Fifty times you stopped and looked inward. That's where the map gets drawn."
+    },
+    "supernova": {
+      "title": "Supernova",
+      "unlockCondition": "Hit a 90+ day goal",
+      "unlockCopy": "Ninety days ago you set this. Most people would've forgotten. You didn't."
+    },
+    "den_builder": {
+      "title": "Den Builder",
+      "unlockCondition": "3 daily quests as streaks for 14 days",
+      "unlockCopy": "Three habits, two weeks, all at once. You're not maintaining anymore — you're building."
+    },
+    "foxfire": {
+      "title": "Foxfire",
+      "unlockCondition": "First 'future you over right-now you' choice logged",
+      "unlockCopy": "You felt both pulls. You picked the one that points forward. The fox sees you."
+    },
+    "den": {
+      "title": "Den",
+      "unlockCondition": "First Sensory Reset logged",
+      "unlockCopy": "You noticed what you needed and you gave it to yourself. That's the whole skill."
+    },
+    "signal_through_noise": {
+      "title": "Signal Through Noise",
+      "unlockCondition": "5 Body Doubling sessions completed",
+      "unlockCopy": "Other brains in the room. Yours works better with company. Now you know."
+    },
+    "threshold": {
+      "title": "Threshold",
+      "unlockCondition": "10 Two-Minute Starts",
+      "unlockCopy": "Starting is the boss fight. You've beaten it ten times."
+    },
+    "wavelength": {
+      "title": "Wavelength",
+      "unlockCondition": "7 days of Spoon Check-ins",
+      "unlockCopy": "You're learning your own pattern. That's the map nobody else can draw for you."
+    },
+    "cartographer": {
+      "title": "Cartographer",
+      "unlockCondition": "First Hyperfocus Capture logged",
+      "unlockCopy": "You caught the conditions. Now you can recreate them."
+    },
+    "eye_of_the_storm": {
+      "title": "Eye of the Storm",
+      "unlockCondition": "Complete 7 days of The 10-Minute Window",
+      "unlockCopy": "You gave the feelings a room instead of the whole house. That's a skill people spend years learning."
+    },
+    "radio_silence": {
+      "title": "Radio Silence",
+      "unlockCondition": "Complete a full No-Contact Week",
+      "unlockCopy": "Seven days. The pull was loud and you didn't answer. Whatever you decide after this, you decided it clear-headed."
+    },
+    "gravity_well": {
+      "title": "Gravity Well",
+      "unlockCondition": "Complete Don't Check for 14 days",
+      "unlockCopy": "Two weeks without feeding the loop. The pull is weaker now. That's not nothing — that's neuroscience."
+    },
+    "new_sky": {
+      "title": "New Sky",
+      "unlockCondition": "Complete the full After the Storm pack (28 days)",
+      "unlockCopy": "Four weeks ago you turned this pack on because you needed it. You're not the same person now. You can turn it off."
+    },
+    "the_receipt": {
+      "title": "The Receipt",
+      "unlockCondition": "First Words-vs-Actions check logged",
+      "unlockCopy": "You looked at what they did instead of what they said. That's the start of seeing people clearly."
+    },
+    "compass_calibration": {
+      "title": "Compass Calibration",
+      "unlockCondition": "Log 10 Gut Notes",
+      "unlockCopy": "Ten data points on your own instincts. You're learning when to trust your gut and when to push back on it. Both matter."
+    },
+    "held_the_line": {
+      "title": "Held the Line",
+      "unlockCondition": "Complete The Pressure Check streak for 14 days",
+      "unlockCopy": "Two weeks of noticing the rush. Pressure is information. You're reading it now."
+    },
+    "pace_setter": {
+      "title": "Pace Setter",
+      "unlockCondition": "Complete One Question, Not Three for 14 days",
+      "unlockCopy": "You let trust build at the speed it should build, not the speed someone wanted you to give it. That's not cold. That's wisdom."
+    },
+    "open_eyes": {
+      "title": "Open Eyes",
+      "unlockCondition": "Complete a 30-Day Pattern",
+      "unlockCopy": "Thirty days of watching instead of guessing. You decided about a person based on evidence. That's how adults do it."
+    }
+  },
+
+  "buddyReactions": {
+    "first_time_complete": "First time, huh? You showed up. That's already further than most.",
+    "returning_after_break": "You're back. No lecture, no guilt. Just glad you're here.",
+    "low_energy_complete": "Low day, and you still did it. That counts for more, not less.",
+    "milestone_30_day": "Thirty days. I noticed every one of them.",
+    "milestone_90_day": "Ninety days. You're not the same person who started.",
+    "grace_day_used": "I held the streak. Rest. Come back when you're ready.",
+    "grace_day_granted": "You've got a Grace Day in the bank. Use it when you need it. No questions.",
+    "floor_quest_only_day": "Some days the showing up is the whole thing. That's enough."
+  },
+
+  "notifications": {
+    "morning_gentle": "I'm in the den. Come find me when you're ready.",
+    "evening_check": "Quiet night. No pressure — just here if you want me.",
+    "weekly_summary_calm": "This week happened. Want to see how it shaped up?",
+    "FORBIDDEN_EXAMPLES_DO_NOT_USE": [
+      "DON'T BREAK YOUR STREAK!",
+      "You're about to lose your progress!",
+      "Come back NOW or else!",
+      "You crushed it superstar! 🎉🎉🎉"
+    ]
+  },
+
+  "disclaimers": {
+    "_lawyer_review_required": "All text in this section is a starting draft. Review with legal counsel before launch. Do not ship verbatim without review.",
+    "not_treatment_short": "Sparq is a wellness tool, not medical or mental-health treatment. It does not diagnose, treat, or replace professional care.",
+    "not_treatment_full": "Sparq is designed to support self-awareness and habit-building. It is not a substitute for professional medical, psychological, or psychiatric care. Sparq does not diagnose any condition, does not provide treatment, and is not appropriate for use during a mental health crisis. If you are in crisis, please contact a qualified professional or one of the crisis resources listed in the app.",
+    "recovery_pack_activation": "The After the Storm pack contains content about relationship endings and difficult emotions. It is designed to support healthy coping skills — not to replace therapy or professional support. If your feelings are overwhelming, please reach out to a counselor, therapist, or crisis line. You can turn this pack off any time.",
+    "crisis_screen_header": "If you're in immediate danger or thinking about harming yourself, please reach out now. You don't have to handle this alone.",
+    "data_use_short": "Sparq stores your quest activity and reflections on your device and on our servers to make the app work for you. We do not sell your data. See the Privacy Policy for full details.",
+    "age_gate_under_13": "Sparq is not available for users under 13.",
+    "age_gate_under_16": "Because you're under 16, we'll need a parent or guardian to confirm your account before you can continue."
+  },
+
+  "crisisResources": {
+    "_lawyer_review_required": "Verify all numbers and URLs are current and valid for the regions you ship in. Update as resources change. Manitoba/Canada and US resources included as starting set.",
+    "_display_rule": "Always show resources for the user's region first, with global options below. Never replace with ads. Never gate behind a paywall.",
+    "resources": [
+      {
+        "region": "CA",
+        "name": "9-8-8 Suicide Crisis Helpline",
+        "type": "call",
+        "contact": "988",
+        "alwaysAvailable": true,
+        "note": "Free, 24/7 call or text support across Canada."
+      },
+      {
+        "region": "CA",
+        "name": "9-8-8 Suicide Crisis Helpline (text)",
+        "type": "text",
+        "contact": "988",
+        "alwaysAvailable": true
+      },
+      {
+        "region": "CA",
+        "name": "Kids Help Phone",
+        "type": "call",
+        "contact": "1-800-668-6868",
+        "alwaysAvailable": true,
+        "population": "youth",
+        "note": "Free, confidential, 24/7 support for youth across Canada. Also text CONNECT to 686868."
+      },
+      {
+        "region": "CA-MB",
+        "name": "Klinic Crisis Line (Manitoba)",
+        "type": "call",
+        "contact": "204-786-8686",
+        "alwaysAvailable": true,
+        "note": "24/7 crisis support in Manitoba. Toll-free: 1-888-322-3019."
+      },
+      {
+        "region": "US",
+        "name": "988 Suicide & Crisis Lifeline",
+        "type": "call",
+        "contact": "988",
+        "alwaysAvailable": true
+      },
+      {
+        "region": "US",
+        "name": "Crisis Text Line",
+        "type": "text",
+        "contact": "Text HOME to 741741",
+        "alwaysAvailable": true
+      },
+      {
+        "region": "GLOBAL",
+        "name": "International Association for Suicide Prevention",
+        "type": "web",
+        "contact": "https://www.iasp.info/resources/Crisis_Centres/",
+        "alwaysAvailable": true,
+        "note": "Directory of crisis centres worldwide."
+      }
+    ]
+  },
+
+  "packActivation": {
+    "after_the_storm": {
+      "title": "Activate After the Storm?",
+      "body": "This pack is for when a relationship ends and your brain won't stop spinning. It's 28 days of quests built to shorten the spiral. You can turn it off any time.",
+      "acknowledgmentText": "I understand Sparq is a wellness tool and not a substitute for therapy or crisis support.",
+      "confirmButton": "Turn it on",
+      "cancelButton": "Not now"
+    },
+    "calibrated_trust": {
+      "title": "Activate Calibrated Trust?",
+      "body": "This pack is for working on how you read people — noticing actions vs words, pacing how much you share, paying attention to your own gut. It's 30 days of small quests. Sparq won't tell you who to trust or who not to. That's always your call.",
+      "acknowledgmentText": "I understand these quests support self-awareness and are not advice about specific people in my life.",
+      "confirmButton": "Turn it on",
+      "cancelButton": "Not now"
+    }
+  }
+}

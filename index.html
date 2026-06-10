@@ -9,6 +9,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -29,10 +30,24 @@
 
     <!-- Email form -->
     <div class="auth-form">
-      <input type="email" class="auth-input" id="authEmail" placeholder="Email" autocomplete="email">
-      <input type="password" class="auth-input" id="authPassword" placeholder="Password" autocomplete="current-password">
+      <input type="email" class="auth-input" id="authEmail" placeholder="Email" autocomplete="email" aria-label="Email address">
+      <div class="auth-pw-wrap">
+        <input type="password" class="auth-input auth-input-pw" id="authPassword" placeholder="Password" autocomplete="current-password" aria-label="Password">
+        <button type="button" class="auth-pw-toggle" onclick="togglePasswordVisibility('authPassword', this)" aria-label="Show password">👁️</button>
+      </div>
       <div class="auth-confirm-row" id="confirmRow" style="display:none">
-        <input type="password" class="auth-input" id="authConfirm" placeholder="Confirm password" autocomplete="new-password">
+        <div class="auth-pw-wrap">
+          <input type="password" class="auth-input auth-input-pw" id="authConfirm" placeholder="Confirm password" autocomplete="new-password" aria-label="Confirm password">
+          <button type="button" class="auth-pw-toggle" onclick="togglePasswordVisibility('authConfirm', this)" aria-label="Show password">👁️</button>
+        </div>
+      </div>
+      <div class="auth-confirm-row" id="dobRow" style="display:none">
+        <label class="auth-dob-label">🎂 Your birthday <span class="auth-dob-hint">(must be 13+)</span></label>
+        <div class="auth-dob-row">
+          <input type="number" inputmode="numeric" class="auth-input auth-dob-input" id="dobMonth" placeholder="MM" min="1" max="12" aria-label="Birth month">
+          <input type="number" inputmode="numeric" class="auth-input auth-dob-input" id="dobDay" placeholder="DD" min="1" max="31" aria-label="Birth day">
+          <input type="number" inputmode="numeric" class="auth-input auth-dob-input auth-dob-year" id="dobYear" placeholder="YYYY" min="1900" max="2013" aria-label="Birth year">
+        </div>
       </div>
       <button class="auth-submit-btn" id="authSubmitBtn" onclick="handleEmailAuth()">Log In</button>
       <button class="auth-forgot" id="forgotBtn" onclick="handleForgotPassword()">Forgot password?</button>
@@ -54,7 +69,7 @@
     </div>
 
     <p class="auth-error" id="authError"></p>
-    <p class="auth-legal">By signing in you agree to our Terms &amp; Privacy Policy</p>
+    <p class="auth-legal">By signing in you agree to our <a href="terms.html" target="_blank">Terms of Service</a> &amp; <a href="privacy.html" target="_blank">Privacy Policy</a></p>
   </div>
 </div>
 
@@ -70,6 +85,82 @@
     <div class="ach-desc" id="achDesc">Complete your first quest</div>
   </div>
   <span class="ach-xp" id="achXP">+20 XP</span>
+</div>
+
+<!-- Una the Axolotl onboarding overlay -->
+<div class="una-overlay" id="unaOverlay" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:2500;display:flex;align-items:flex-end;justify-content:center;padding:20px 16px 40px;">
+  <div class="una-backdrop"></div>
+  <!-- Spotlight highlight (positioned dynamically) -->
+  <div class="una-spotlight" id="unaSpotlight"></div>
+  <div class="una-dialog">
+    <div class="una-character">
+      <img src="assets/una.svg" alt="Una the Axolotl" width="100" height="120">
+    </div>
+    <div class="una-bubble">
+      <div class="una-name">Una <span class="una-title">Your Sparq Guide</span></div>
+      <div class="una-text" id="unaText">Hi! I'm Una 👋</div>
+      <div class="una-nav">
+        <button class="una-back-btn" id="unaBackBtn" onclick="rewindOnboarding()" style="visibility:hidden">← Back</button>
+        <div class="una-dots" id="unaDots"></div>
+        <button class="una-next-btn" id="unaNextBtn" onclick="advanceOnboarding()">Next →</button>
+      </div>
+      <button class="una-skip-btn-bottom" onclick="skipOnboarding()">Skip tour</button>
+    </div>
+  </div>
+</div>
+
+<!-- Enemy Victory Modal -->
+<div class="modal-overlay" id="enemyVictoryModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center">
+  <div class="modal-card victory-card">
+    <div class="victory-title">⚔️ VICTORY!</div>
+    <div class="victory-enemy-icon" id="victoryEnemyIcon">⚡</div>
+    <div class="victory-enemy-name" id="victoryEnemyName">Volt</div>
+    <div class="victory-enemy-subtitle">has been DEFEATED!</div>
+    <div class="victory-reward" id="victoryReward">+100 🪙</div>
+    <div class="victory-next" id="victoryNextText"></div>
+    <button class="victory-close-btn" onclick="closeVictoryModal()">Continue ⚡</button>
+  </div>
+</div>
+
+<!-- Tap Battle Modal -->
+<div class="modal-overlay" id="tapBattleModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:1500;display:flex;align-items:center;justify-content:center">
+  <div class="tap-battle-card">
+    <div class="tap-battle-header">
+      <div class="tap-battle-title">⚔️ TAP BATTLE</div>
+      <div class="tap-battle-vs">
+        <span class="tap-battle-player">🐼 Karu</span>
+        <span class="tap-battle-vs-text">VS</span>
+        <span class="tap-battle-enemy" id="tapBattleEnemyLabel">⚡ Volt</span>
+      </div>
+    </div>
+    <div class="tap-battle-stage">
+      <div class="tap-battle-bars">
+        <div class="tap-battle-hp-row">
+          <span class="tap-hp-label">YOU</span>
+          <div class="tap-hp-bar"><div class="tap-hp-fill tap-hp-player" id="tapBattlePlayerHp" style="width:100%"></div></div>
+        </div>
+        <div class="tap-battle-hp-row">
+          <span class="tap-hp-label">FOE</span>
+          <div class="tap-hp-bar"><div class="tap-hp-fill tap-hp-enemy" id="tapBattleEnemyHp" style="width:100%"></div></div>
+        </div>
+      </div>
+      <div class="tap-battle-timer">
+        <span class="tap-timer-label">⏱️</span>
+        <span class="tap-timer-val" id="tapBattleTimer">30</span>
+      </div>
+      <button class="tap-battle-target" id="tapBattleTarget" onclick="tapBattleHit()">
+        <span class="tap-target-emoji" id="tapBattleTargetEmoji">⚡</span>
+      </button>
+      <div class="tap-battle-hint">TAP THE ENEMY AS FAST AS YOU CAN!</div>
+      <div class="tap-battle-dodge" id="tapBattleDodge" style="display:none">
+        <div class="dodge-warning">⚠️ ATTACK INCOMING — TAP TO DODGE!</div>
+        <button class="dodge-btn" onclick="tapBattleDodge()">🛡️ DODGE!</button>
+      </div>
+    </div>
+    <div class="tap-battle-actions">
+      <button class="tap-battle-flee" onclick="tapBattleFlee()">Flee (lose)</button>
+    </div>
+  </div>
 </div>
 
 <!-- Level-up modal -->
@@ -118,6 +209,13 @@
             <div class="xp-bar-fill" id="xpBar" style="width:55%"></div>
           </div>
           <div class="xp-label"><span id="currentXP">0</span> / <span id="xpNextLevel">100</span> XP</div>
+          <div class="hunger-row">
+            <div class="hunger-bar-wrap">
+              <div class="hunger-bar-fill" id="hungerBar" style="width:100%"></div>
+            </div>
+            <span class="hunger-label" id="hungerLabel">😋 Full</span>
+            <button class="feed-btn" onclick="openFeedMenu()">🍎 Feed</button>
+          </div>
         </div>
       </div>
       <div class="stats-row">
@@ -139,15 +237,15 @@
       </div>
     </div>
 
-    <!-- Fitch Rival Card -->
+    <!-- Volt Rival Card -->
     <div class="rival-card" id="rivalCard">
       <div class="rival-badge">⚔️ RIVAL</div>
       <div class="rival-row">
         <div class="rival-avatar">
-          <img src="assets/fitch.svg" alt="Fitch" width="52" height="52">
+          <img src="assets/fitch.svg" alt="Volt" width="52" height="52">
         </div>
         <div class="rival-info">
-          <div class="rival-name">Fitch <span class="rival-title">Dark Wolf</span></div>
+          <div class="rival-name">Volt <span class="rival-title">Electric Wolf</span></div>
           <div class="rival-stats">
             <span class="rival-stat-item red">⚡ <span id="fitchXP">72</span> XP</span>
             <span class="rival-stat-item">🔥 3 day streak</span>
@@ -155,7 +253,16 @@
           <div class="rival-gap" id="rivalGap">You're 17 XP behind — catch up!</div>
         </div>
       </div>
-      <button class="rival-btn" onclick="challengeFitch()">⚔️ Challenge Fitch</button>
+      <div class="enemy-hp-wrap">
+        <div class="enemy-hp-label">
+          <span>❤️ HP</span>
+          <span id="enemyHpText">100%</span>
+        </div>
+        <div class="enemy-hp-bar">
+          <div class="enemy-hp-fill" id="enemyHpFill" style="width:100%"></div>
+        </div>
+      </div>
+      <button class="rival-btn" onclick="challengeFitch()">⚔️ Challenge Volt</button>
     </div>
 
     <!-- Mood Check -->
@@ -178,6 +285,21 @@
         <h4><span id="streakDays">0</span> Day Streak</h4>
         <p>Complete a daily quest to ignite your streak</p>
       </div>
+    </div>
+
+    <!-- Adventures -->
+    <div class="section-title">Adventures 🗺️</div>
+    <div class="adventures-row" id="adventuresRow"></div>
+
+    <!-- Focus Dungeon -->
+    <div class="focus-dungeon-card" onclick="openFocusDungeonPicker()">
+      <div class="fd-card-glow"></div>
+      <div class="fd-card-icon">🏰</div>
+      <div class="fd-card-body">
+        <div class="fd-card-title">Focus Dungeon</div>
+        <div class="fd-card-sub">Earn XP while you focus · <span id="fdStreakMini">0</span> runs completed</div>
+      </div>
+      <div class="fd-card-cta">▶ Enter</div>
     </div>
 
     <!-- Tasks / Quests -->
@@ -271,7 +393,7 @@
           <span class="journal-entry-mood">😄</span>
           <span class="journal-entry-date">Yesterday</span>
         </div>
-        <p class="journal-entry-text">Had a really solid focus session today. Karu leveled up which made me so happy!! Fitch is still ahead but I'm catching up.</p>
+        <p class="journal-entry-text">Had a really solid focus session today. Karu leveled up which made me so happy!! Volt is still ahead but I'm catching up.</p>
       </div>
       <div class="journal-entry-card">
         <div class="journal-entry-header">
@@ -333,6 +455,212 @@
         <div class="reminder-time">📊 Sunday 6:00 PM</div>
       </div>
       <div class="reminder-toggle off" onclick="toggleReminder(this)"><div class="toggle-knob"></div></div>
+    </div>
+
+    <div class="section-title">Your Custom Reminders</div>
+    <div id="customReminderList"></div>
+
+    <button class="add-reminder-btn" onclick="showAddReminderDialog()">➕ Add Custom Reminder</button>
+  </div>
+
+  <!-- Add Reminder Modal -->
+  <div class="modal-overlay" id="addReminderModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
+    <div class="modal-card">
+      <h2 class="modal-title">🔔 New Reminder</h2>
+      <input type="text" class="auth-input" id="newReminderTitle" placeholder="What to remind you about?" maxlength="60" aria-label="Reminder title">
+      <input type="time" class="auth-input" id="newReminderTime" aria-label="Reminder time">
+      <div class="reminder-freq-row">
+        <label class="freq-chip"><input type="radio" name="reminderFreq" value="daily" checked onchange="onReminderFreqChange()"><span>Every day</span></label>
+        <label class="freq-chip"><input type="radio" name="reminderFreq" value="weekdays" onchange="onReminderFreqChange()"><span>Weekdays</span></label>
+        <label class="freq-chip"><input type="radio" name="reminderFreq" value="monthly" onchange="onReminderFreqChange()"><span>Monthly (bills)</span></label>
+        <label class="freq-chip"><input type="radio" name="reminderFreq" value="once" onchange="onReminderFreqChange()"><span>Just once</span></label>
+      </div>
+
+      <!-- Monthly day-of-month picker -->
+      <div id="reminderDayOfMonthRow" style="display:none;margin-bottom:12px;">
+        <label class="auth-dob-label">Day of month <span class="auth-dob-hint">(1-31)</span></label>
+        <input type="number" class="auth-input" id="reminderDayOfMonth" min="1" max="31" placeholder="e.g. 15">
+      </div>
+
+      <!-- Just once date picker -->
+      <div id="reminderOnceDateRow" style="display:none;margin-bottom:12px;">
+        <label class="auth-dob-label">On this date</label>
+        <input type="date" class="auth-input" id="reminderOnceDate">
+      </div>
+
+      <!-- Optional range for recurring -->
+      <div id="reminderRangeRow" style="display:block;margin-bottom:12px;">
+        <label class="auth-dob-label">Run date range <span class="auth-dob-hint">(optional)</span></label>
+        <div class="reminder-range-grid">
+          <input type="date" class="auth-input" id="reminderStartDate" placeholder="Start" aria-label="Start date">
+          <input type="date" class="auth-input" id="reminderEndDate" placeholder="End" aria-label="End date">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closeAddReminderDialog()">Cancel</button>
+        <button class="modal-btn-confirm" onclick="saveCustomReminder()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Focus Dungeon Duration Picker -->
+  <div class="modal-overlay" id="focusPickerModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
+    <div class="modal-card modal-card-wide">
+      <h2 class="modal-title">🏰 Focus Dungeon</h2>
+      <p class="modal-hint">Enter a focus session. Enemies spawn — tap to slay. Stay focused to earn bonus XP. Leave the app = run fails.</p>
+      <div class="fd-duration-row">
+        <button class="fd-dur-btn" onclick="startFocusDungeon(15)">
+          <div class="fd-dur-time">15</div>
+          <div class="fd-dur-label">min · Easy</div>
+          <div class="fd-dur-reward">+300 XP potential</div>
+        </button>
+        <button class="fd-dur-btn fd-dur-btn-mid" onclick="startFocusDungeon(25)">
+          <div class="fd-dur-time">25</div>
+          <div class="fd-dur-label">min · Classic</div>
+          <div class="fd-dur-reward">+500 XP potential</div>
+        </button>
+        <button class="fd-dur-btn" onclick="startFocusDungeon(50)">
+          <div class="fd-dur-time">50</div>
+          <div class="fd-dur-label">min · Deep</div>
+          <div class="fd-dur-reward">+1200 XP potential</div>
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closeFocusPicker()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Focus Dungeon Active Screen -->
+  <div class="focus-dungeon-screen" id="focusDungeonScreen" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:1800">
+    <div class="fd-bg"></div>
+    <div class="fd-particles" id="fdParticles"></div>
+
+    <div class="fd-hud">
+      <div class="fd-hud-top">
+        <div class="fd-hud-time">
+          <span class="fd-time-label">⏱️ Time Left</span>
+          <span class="fd-time-val" id="fdTime">25:00</span>
+        </div>
+        <div class="fd-hud-stats">
+          <div class="fd-hud-stat"><span class="fd-stat-icon">⚔️</span><span id="fdKills">0</span></div>
+          <div class="fd-hud-stat"><span class="fd-stat-icon">⚡</span><span id="fdXp">0</span></div>
+        </div>
+      </div>
+      <div class="fd-hud-progress"><div class="fd-hud-progress-fill" id="fdProgressFill" style="width:0%"></div></div>
+    </div>
+
+    <!-- Center action area — tap enemies spawn here -->
+    <div class="fd-arena" id="fdArena">
+      <div class="fd-hero">
+        <img src="assets/red-panda.svg" alt="Karu" class="fd-hero-img pet-img">
+        <div class="fd-hero-aura"></div>
+      </div>
+    </div>
+
+    <!-- Warning banner shown when app visibility lost -->
+    <div class="fd-warning" id="fdWarning" style="display:none">
+      <div class="fd-warning-title">⚠️ FOCUS BROKEN</div>
+      <div class="fd-warning-text">Return to the app or you'll lose this run!</div>
+    </div>
+
+    <div class="fd-footer">
+      <button class="fd-quit-btn" onclick="quitFocusDungeon()">End Run</button>
+      <div class="fd-tip" id="fdTip">💡 Tap enemies as they appear</div>
+    </div>
+  </div>
+
+  <!-- New Quest Modal -->
+  <div class="modal-overlay" id="newQuestModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
+    <div class="modal-card modal-card-wide">
+      <h2 class="modal-title">⚔️ New Quest</h2>
+      <p class="modal-hint">Pick a quick-start idea or type your own. Karu will cheer you on!</p>
+      <div class="quest-preset-tabs" id="questPresetTabs">
+        <button class="qp-tab active" data-cat="morning" onclick="filterQuestPresets('morning', this)">☀️ Morning</button>
+        <button class="qp-tab" data-cat="work"     onclick="filterQuestPresets('work', this)">💻 Work</button>
+        <button class="qp-tab" data-cat="selfcare" onclick="filterQuestPresets('selfcare', this)">💆 Self-care</button>
+        <button class="qp-tab" data-cat="evening"  onclick="filterQuestPresets('evening', this)">🌙 Evening</button>
+        <button class="qp-tab" data-cat="quickwin" onclick="filterQuestPresets('quickwin', this)">⚡ Quick</button>
+      </div>
+      <div class="quest-preset-grid" id="questPresetGrid"></div>
+      <div class="quest-or-divider"><span>or write your own</span></div>
+      <input type="text" class="auth-input" id="newQuestTitle" placeholder="e.g. Walk for 10 minutes" maxlength="80" aria-label="Quest name">
+      <div class="xp-picker">
+        <span class="xp-picker-label">XP reward:</span>
+        <label class="xp-chip"><input type="radio" name="questXp" value="10"><span>⭐ 10 XP<br><small>Quick</small></span></label>
+        <label class="xp-chip"><input type="radio" name="questXp" value="20" checked><span>⚡ 20 XP<br><small>Normal</small></span></label>
+        <label class="xp-chip"><input type="radio" name="questXp" value="40"><span>🔥 40 XP<br><small>Big one</small></span></label>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closeNewQuestDialog()">Cancel</button>
+        <button class="modal-btn-confirm" onclick="saveNewQuest()">Add Quest</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feed Karu Modal -->
+  <div class="modal-overlay" id="feedModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
+    <div class="modal-card modal-card-wide">
+      <h2 class="modal-title">🍎 Feed Karu</h2>
+      <p class="modal-hint">Tap a food item to feed it. Buy more in Shop → Food.</p>
+      <div class="feed-grid" id="feedGrid"></div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closeFeedMenu()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pet Selector Modal -->
+  <div class="modal-overlay" id="petSelectorModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
+    <div class="modal-card modal-card-wide">
+      <h2 class="modal-title">🐾 Choose Your Companion</h2>
+      <p class="modal-hint">Your ADHD companion who cheers you on. You can change anytime.</p>
+      <div class="pet-picker-grid" id="petPickerGrid"></div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closePetSelector()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pronoun Picker Modal -->
+  <div class="modal-overlay" id="pronounModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
+    <div class="modal-card">
+      <h2 class="modal-title">💬 Your Pronouns</h2>
+      <p class="modal-hint">Pick what Sparq uses to refer to you.</p>
+      <div class="pronoun-options">
+        <label class="pronoun-chip"><input type="radio" name="pronounChoice" value="he/him"><span>He / Him</span></label>
+        <label class="pronoun-chip"><input type="radio" name="pronounChoice" value="she/her"><span>She / Her</span></label>
+        <label class="pronoun-chip"><input type="radio" name="pronounChoice" value="they/them"><span>They / Them</span></label>
+        <label class="pronoun-chip"><input type="radio" name="pronounChoice" value="xe/xem"><span>Xe / Xem</span></label>
+        <label class="pronoun-chip"><input type="radio" name="pronounChoice" value="any"><span>Any pronouns</span></label>
+        <label class="pronoun-chip"><input type="radio" name="pronounChoice" value="prefer_not"><span>Prefer not to say</span></label>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closePronouns()">Cancel</button>
+        <button class="modal-btn-confirm" onclick="savePronouns()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bag / Inventory Modal -->
+  <div class="modal-overlay" id="bagModal" style="opacity:0;pointer-events:none;position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center">
+    <div class="modal-card modal-card-wide">
+      <h2 class="modal-title">🎒 My Bag</h2>
+      <div class="bag-tabs-scroll">
+        <div class="bag-tabs">
+          <button class="bag-tab active" data-type="potion" onclick="filterBag('potion', this)">⚗️ Potions</button>
+          <button class="bag-tab" data-type="food" onclick="filterBag('food', this)">🍎 Food</button>
+          <button class="bag-tab" data-type="treat" onclick="filterBag('treat', this)">🍬 Treats</button>
+          <button class="bag-tab" data-type="gear" onclick="filterBag('gear', this)">🎩 Gear</button>
+          <button class="bag-tab" data-type="key" onclick="filterBag('key', this)">🔑 Keys</button>
+          <button class="bag-tab" data-type="trophy" onclick="filterBag('trophy', this)">🏆 Trophies</button>
+        </div>
+      </div>
+      <div class="bag-grid" id="bagGrid"></div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closeInventory()">Close</button>
+      </div>
     </div>
   </div>
 
@@ -444,31 +772,66 @@
     <!-- Rival snapshot -->
     <div class="section-title">Rival Status</div>
     <div class="rival-mini-card">
-      <img src="assets/fitch.svg" alt="Fitch" width="44" height="44" class="rival-mini-img">
+      <img src="assets/fitch.svg" alt="Volt" width="44" height="44" class="rival-mini-img">
       <div class="rival-mini-info">
-        <div class="rival-mini-name">Fitch <span>Dark Wolf</span></div>
+        <div class="rival-mini-name">Volt <span>Electric Wolf</span></div>
         <div class="rival-mini-xp">⚡ <span id="fitchXPProfile">72</span> XP · Lv.4</div>
       </div>
       <div class="rival-mini-delta" id="rivalDelta">-17 XP</div>
     </div>
 
     <div class="section-title">Settings</div>
-    <div class="settings-item">
+    <div class="settings-item" onclick="openInventory()">
+      <div class="settings-icon" style="background: rgba(168,126,255,0.15)">🎒</div>
+      <div class="settings-text"><h4>My Bag</h4><p>Use potions, check food</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="switchPage('rogues'); renderRogues();">
+      <div class="settings-icon" style="background: rgba(255,68,68,0.15)">⚔️</div>
+      <div class="settings-text"><h4>Rogues Gallery</h4><p>Your enemies, defeated and pending</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="switchPage('store')">
+      <div class="settings-icon" style="background: rgba(255,217,61,0.15)">🛒</div>
+      <div class="settings-text"><h4>Sparq Shop</h4><p>Spend coins on pet gear &amp; backgrounds</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="toggleSound(); updateSoundToggleLabel();">
+      <div class="settings-icon" style="background: rgba(255,217,61,0.15)">🔊</div>
+      <div class="settings-text"><h4 id="soundToggleLabel">Sound: ON</h4><p>Toggle game sounds on/off</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="toggleReducedMotion()">
+      <div class="settings-icon" style="background: rgba(124,92,252,0.15)">🪷</div>
+      <div class="settings-text"><h4 id="motionToggleLabel">Motion: Full</h4><p>Reduce animations if the app feels laggy</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="replayOnboarding()">
+      <div class="settings-icon" style="background: rgba(255,170,220,0.15)">🐉</div>
+      <div class="settings-text"><h4>Meet Una Again</h4><p>Replay the Sparq tutorial</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="showCustomizePet()">
       <div class="settings-icon" style="background: rgba(124,92,252,0.15)">🎨</div>
       <div class="settings-text"><h4>Customize Pet</h4><p>Change Karu's look &amp; accessories</p></div>
       <span class="settings-arrow">›</span>
     </div>
-    <div class="settings-item">
+    <div class="settings-item" onclick="showPronouns()">
+      <div class="settings-icon" style="background: rgba(168,126,255,0.15)">💬</div>
+      <div class="settings-text"><h4 id="pronounLabel">Pronouns: they/them</h4><p>How Sparq refers to you</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="showNDProfile()">
       <div class="settings-icon" style="background: rgba(0,212,170,0.1)">🧠</div>
       <div class="settings-text"><h4>ND Profile</h4><p>ADHD, Autism, Dyslexia + more</p></div>
       <span class="settings-arrow">›</span>
     </div>
-    <div class="settings-item">
+    <div class="settings-item" onclick="switchPage('reminders')">
       <div class="settings-icon" style="background: rgba(255,217,61,0.1)">🔔</div>
       <div class="settings-text"><h4>Notifications</h4><p>Gentle reminders, no spam</p></div>
       <span class="settings-arrow">›</span>
     </div>
-    <div class="settings-item">
+    <div class="settings-item" onclick="shareSparq()">
       <div class="settings-icon" style="background: rgba(255,95,160,0.1)">💝</div>
       <div class="settings-text"><h4>Share Sparq</h4><p>Tell your people about it</p></div>
       <span class="settings-arrow">›</span>
@@ -480,8 +843,57 @@
       <span class="settings-arrow">›</span>
     </div>
 
+    <div class="settings-item" onclick="exportUserData()">
+      <div class="settings-icon" style="background:rgba(0,212,170,0.1)">📥</div>
+      <div class="settings-text"><h4>Export my data</h4><p>Download a copy of your Sparq data</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="deleteAccount()" style="color:#FF4040">
+      <div class="settings-icon" style="background:rgba(255,64,64,0.12)">🗑️</div>
+      <div class="settings-text"><h4 style="color:#FF4040">Delete account</h4><p>Permanently erase your account &amp; data</p></div>
+      <span class="settings-arrow">›</span>
+    </div>
+
     <button class="logout-btn" onclick="handleLogout()">Log Out</button>
 
+  </div>
+
+  <!-- ── ROGUES' GALLERY PAGE ───────────────────────────────────────────────── -->
+  <div class="page" id="page-rogues">
+    <div class="header">
+      <div class="header-left">
+        <h3>Your</h3>
+        <h1>Rogues Gallery 📜</h1>
+      </div>
+    </div>
+    <p class="rogues-subtitle">All the enemies you've faced — and those still to come.</p>
+    <div class="rogues-list" id="roguesList"></div>
+    <button class="back-to-profile-btn" onclick="switchPage('profile')">← Back to Profile</button>
+  </div>
+
+  <!-- ── STORE PAGE ─────────────────────────────────────────────────────────── -->
+  <div class="page" id="page-store">
+    <div class="header">
+      <div class="header-left">
+        <h3>Sparq</h3>
+        <h1>Shop 🛒</h1>
+      </div>
+      <div class="coin-display">
+        <span class="coin-icon">🪙</span>
+        <span class="coin-count" id="coinCount">0</span>
+      </div>
+    </div>
+    <div class="store-tabs">
+      <button class="store-tab active" data-slot="hat" onclick="filterStore('hat', this)">🎩 Hats</button>
+      <button class="store-tab" data-slot="accessory" onclick="filterStore('accessory', this)">✨ Gear</button>
+      <button class="store-tab" data-slot="background" onclick="filterStore('background', this)">🏞️ Backgrounds</button>
+      <button class="store-tab" data-slot="food" onclick="filterStore('food', this)">🍎 Food</button>
+      <button class="store-tab" data-slot="potion" onclick="filterStore('potion', this)">⚗️ Potions</button>
+      <button class="store-tab" data-slot="treat" onclick="filterStore('treat', this)">🍬 Treats</button>
+      <button class="store-tab" data-slot="key" onclick="filterStore('key', this)">🔑 Keys</button>
+    </div>
+    <div class="store-grid" id="storeGrid"></div>
+    <button class="back-to-profile-btn" onclick="switchPage('profile')">← Back to Profile</button>
   </div>
 
 </div>
@@ -540,32 +952,35 @@
 </div>
 
 <!-- FAB -->
-<button class="fab" id="fab" onclick="showAddTask()">＋</button>
+<button class="fab" id="fab" onclick="showAddTask()" aria-label="Add new quest">
+  <span class="fab-icon">＋</span>
+  <span class="fab-label">New Quest</span>
+</button>
 
 <!-- Bottom Nav (5 tabs) -->
 <div class="bottom-nav">
-  <button class="nav-btn active" id="nav-home" onclick="switchPage('home')">
+  <button class="nav-btn active" id="nav-home" onclick="switchPage('home')" aria-label="Home">
     <span class="nav-icon">🏠</span>
     <span class="nav-label">Home</span>
     <div class="nav-active-bar"></div>
   </button>
-  <button class="nav-btn" id="nav-journal" onclick="switchPage('journal')">
+  <button class="nav-btn" id="nav-journal" onclick="switchPage('journal')" aria-label="Journal">
     <span class="nav-icon">📓</span>
     <span class="nav-label">Journal</span>
     <div class="nav-active-bar"></div>
   </button>
-  <button class="nav-btn" id="nav-reminders" onclick="switchPage('reminders')">
+  <button class="nav-btn" id="nav-reminders" onclick="switchPage('reminders')" aria-label="Reminders">
     <span class="nav-icon">🔔</span>
     <span class="nav-label">Remind</span>
     <div class="nav-active-bar"></div>
     <div class="nav-dot"></div>
   </button>
-  <button class="nav-btn" id="nav-community" onclick="switchPage('community')">
+  <button class="nav-btn" id="nav-community" onclick="switchPage('community')" aria-label="Community">
     <span class="nav-icon">🌈</span>
     <span class="nav-label">Feed</span>
     <div class="nav-active-bar"></div>
   </button>
-  <button class="nav-btn" id="nav-profile" onclick="switchPage('profile')">
+  <button class="nav-btn" id="nav-profile" onclick="switchPage('profile')" aria-label="Profile">
     <span class="nav-icon"><img src="assets/red-panda.svg" width="22" height="22" style="vertical-align:middle"></span>
     <span class="nav-label">Profile</span>
     <div class="nav-active-bar"></div>
@@ -573,7 +988,9 @@
 </div>
 
 <script src="js/app.js"></script>
+<script src="js/sound.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/firestore-sync.js"></script>
 </body>
 </html>
