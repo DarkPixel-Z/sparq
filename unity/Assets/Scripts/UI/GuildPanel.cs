@@ -325,6 +325,21 @@ namespace Sparq.UI
                 string tag  = (tagInput.text  ?? "").Trim().ToUpper();
                 if (name.Length < 3 || name.Length > 24) { errLbl.text = "Name must be 3–24 characters."; return; }
                 if (tag.Length  < 2 || tag.Length  > 4)  { errLbl.text = "Tag must be 2–4 characters."; return; }
+
+                // Guild name + tag are visible to every other player in the
+                // guild browser, so they go through the strict username
+                // inspector (blocks PII, slurs, URLs). Either field failing
+                // surfaces the moderator's reason inline.
+                var nameVerdict = Sparq.Safety.ContentModerator.InspectUsername(name);
+                if (!nameVerdict.Allowed)
+                { errLbl.text = string.IsNullOrEmpty(nameVerdict.UserFacingMessage)
+                    ? "Pick a different guild name." : nameVerdict.UserFacingMessage; return; }
+                var tagVerdict = Sparq.Safety.ContentModerator.InspectUsername(tag);
+                if (!tagVerdict.Allowed)
+                { errLbl.text = string.IsNullOrEmpty(tagVerdict.UserFacingMessage)
+                    ? "Pick a different tag." : tagVerdict.UserFacingMessage; return; }
+                name = nameVerdict.SanitizedText ?? name;
+                tag  = tagVerdict.SanitizedText ?? tag;
                 try
                 {
                     var d = Sparq.Core.SaveService.Data;

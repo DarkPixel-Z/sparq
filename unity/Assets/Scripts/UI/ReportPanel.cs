@@ -227,6 +227,23 @@ namespace Sparq.UI
         private static void OnSubmit(string player, string msg, TMP_InputField notesInput)
         {
             string notes = notesInput == null ? "" : (notesInput.text ?? "");
+
+            // Surface crisis/threat panels if the reporter is themselves in
+            // distress or expressing threats — but DON'T block the report
+            // (users need to be able to quote what they're reporting, even
+            // if the quote contains threat language). Inspection is
+            // additive, not gating.
+            if (!string.IsNullOrWhiteSpace(notes))
+            {
+                var verdict = Sparq.Safety.ContentModerator.Inspect(notes, "report");
+                if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
+                    && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
+                { try { Sparq.UI.CrisisResourcesPanel.Show(); } catch {} }
+                if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.ThreatViolence)
+                    && !Sparq.UI.ThreatResponsePanel.RecentlyDismissed())
+                { try { Sparq.UI.ThreatResponsePanel.Show(); } catch {} }
+            }
+
             try
             {
                 Sparq.Safety.ModerationQueue.Submit(player, msg, _selected, notes);

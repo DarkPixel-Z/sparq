@@ -16,7 +16,9 @@ namespace Sparq.UI
     /// 3. Wires its key elements to Sparq systems:
     ///    - Player name / level / XP from SaveService
     ///    - Hero portrait from HeroClassResolver
-    ///    - PLAY button -> StageMapPanel.Show()
+    ///    - PLAY button -> QuestsPanel.Show() (daily ADHD/autism wellness
+    ///      quests are the primary lobby action; chapter map opens via the
+    ///      left-rail MAP hex → StageMapPanel)
     ///    - Currency labels from SaveService.Data
     /// 4. Adds a top currency strip + bottom nav since the prefab is just
     ///    the central player banner (the demo scene composes multiple parts)
@@ -28,13 +30,131 @@ namespace Sparq.UI
         private const string LOBBY_PREFAB_PATH =
             "Assets/Layer Lab/GUI Pro-FantasyHero/Prefabs/Prefabs_DemoScene_Panels/Lobby.prefab";
 
+        // Master switch for the lobby visual shell. true = clean Sparq lobby
+        // (tile floor + Owl mascot + Tasty NPCs + Quest CTA). false = legacy
+        // Layer Lab prefab path with all the WireXxx hookups. Flipping back
+        // is the rollback if something breaks.
+        // Flipped to FALSE for the next tester round — the procedural lobby
+        // landed with multiple visual bugs (empty top half, wrong Tasty
+        // sub-sprites, broken currency strip, missing bottom nav). The
+        // legacy Layer Lab prefab path plus DeclutterHomeScene + WireByTextLabel
+        // is the known-good ship state. Procedural lobby will get redone
+        // with proper screenshot iteration in a separate session.
+        private const bool USE_PROCEDURAL_LOBBY = false;
+
+        // Reverted to FALSE — user feedback was that the auto-popup of the
+        // quest list on app boot was wrong and the currency-strip rebuild
+        // looked bad. Behavior we want now:
+        //   - App boots into the legacy Layer Lab lobby (the portal screen).
+        //   - The PLAY button on the lobby opens QuestsPanel as a modal
+        //     popup (same wiring as before). No auto-popup on login.
+        //   - No standalone currency strip — the lobby prefab supplies its
+        //     own currency labels.
+        private const bool USE_QUESTS_AS_HOME = false;
+
         private static GameObject _root;
 
         public static void Show()
         {
+            // Always strip the scene-baked overlays (trial card, phoenix,
+            // placeholder square) — they sit on top of any lobby and were
+            // never wanted.
+            DeclutterHomeScene();
+
+            // The Layer Lab "Lobby.prefab" spawn (chibi hero showcase +
+            // portal art + side rails + native nav) is gone. Repeated
+            // attempts to make it look right broke the hero rendering and
+            // testers landed on the empty portal. Replaced with a minimal
+            // procedural lobby: blank background, one big PLAY button,
+            // BottomNavBar already renders on its own. Quests-as-home is
+            // still available behind the flag if you want to restore it.
+            if (USE_QUESTS_AS_HOME)
+            {
+                try { Sparq.UI.QuestsPanel.Show(asHome: true); }
+                catch (System.Exception ex)
+                { Debug.LogError($"[HomeLobbyPanel] QuestsPanel-as-home failed: {ex.Message}"); }
+                return;
+            }
+
             if (_root != null) Object.Destroy(_root);
 
             EnsureEventSystem();
+            // Use the polished legacy Layer Lab lobby — the one with chibi
+            // Karu standing in the forest meadow. X on QuestsPanel destroys
+            // the modal canvas and lands the user back here. The
+            // BuildMinimalLobby() blue-PLAY attempt is dead code now.
+            ShowLegacyLobby();
+            return;
+        }
+
+        // Tiny procedural lobby — replaces the dead Layer Lab prefab spawn.
+        // Soft sky-blue background + one big centered PLAY button. The
+        // BottomNavBar renders on top at sortingOrder 5000; modal popups
+        // (QuestsPanel, Crisis, Threat) render even higher. Tap PLAY → quest
+        // menu. Tap X on quest menu → land back here on this clean view.
+        private static void BuildMinimalLobby()
+        {
+            _root = new GameObject("Sparq_MinimalLobby",
+                typeof(RectTransform), typeof(Canvas),
+                typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var crt = _root.GetComponent<RectTransform>();
+            crt.anchorMin = Vector2.zero; crt.anchorMax = Vector2.one;
+            crt.offsetMin = Vector2.zero; crt.offsetMax = Vector2.zero;
+            var canv = _root.GetComponent<Canvas>();
+            canv.renderMode = RenderMode.ScreenSpaceOverlay;
+            canv.sortingOrder = 100;   // below BottomNavBar (5000) + modals (15000+)
+            var cs = _root.GetComponent<CanvasScaler>();
+            cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            cs.referenceResolution = new Vector2(1080, 1920);
+            cs.matchWidthOrHeight = 0.5f;
+
+            // Soft sky background — fills the screen.
+            var bg = new GameObject("BG", typeof(RectTransform), typeof(Image));
+            bg.transform.SetParent(_root.transform, false);
+            var brt = bg.GetComponent<RectTransform>();
+            brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
+            brt.offsetMin = Vector2.zero; brt.offsetMax = Vector2.zero;
+            bg.GetComponent<Image>().color = new Color(0.55f, 0.78f, 0.94f, 1f);
+            bg.GetComponent<Image>().raycastTarget = true;   // blocks taps to the dead scene below
+
+            // Big centered PLAY button.
+            var btnGO = new GameObject("PlayBtn",
+                typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(UnityEngine.UI.Button));
+            btnGO.transform.SetParent(_root.transform, false);
+            var brT = btnGO.GetComponent<RectTransform>();
+            brT.anchorMin = new Vector2(0.5f, 0.5f); brT.anchorMax = new Vector2(0.5f, 0.5f);
+            brT.pivot = new Vector2(0.5f, 0.5f);
+            brT.anchoredPosition = Vector2.zero;
+            brT.sizeDelta = new Vector2(640, 240);
+            var bImg = btnGO.GetComponent<UnityEngine.UI.Image>();
+            bImg.color = new Color(0.95f, 0.78f, 0.20f, 1f);   // honey gold
+            var btn = btnGO.GetComponent<UnityEngine.UI.Button>();
+            btn.targetGraphic = bImg;
+            btn.onClick.AddListener(LaunchDailyQuests);
+
+            var lblGO = new GameObject("Lbl", typeof(RectTransform));
+            lblGO.transform.SetParent(btnGO.transform, false);
+            var lRT = lblGO.GetComponent<RectTransform>();
+            lRT.anchorMin = Vector2.zero; lRT.anchorMax = Vector2.one;
+            lRT.offsetMin = Vector2.zero; lRT.offsetMax = Vector2.zero;
+            var tm = lblGO.AddComponent<TMPro.TextMeshProUGUI>();
+            tm.text = "PLAY";
+            tm.fontSize = 110;
+            tm.fontStyle = TMPro.FontStyles.Bold;
+            tm.color = new Color(0.20f, 0.12f, 0.05f, 1f);
+            tm.alignment = TMPro.TextAlignmentOptions.Center;
+            tm.font = TMPro.TMP_Settings.defaultFontAsset;
+            tm.raycastTarget = false;
+
+            Debug.Log("[HomeLobbyPanel] MinimalLobby built (PLAY → QuestsPanel).");
+        }
+
+        // Legacy lobby spawn path — preserved so the Layer Lab prefab build
+        // chain still compiles, but no longer called from Show(). Flip the
+        // entry point in Show() back to this if you ever want the full
+        // prefab lobby back. (The minimal lobby above is what ships.)
+        private static void ShowLegacyLobby()
+        {
 
             // ── Build host canvas — high sort so this is THE primary screen ──
             _root = new GameObject("Sparq_HomeLobby",
@@ -66,13 +186,38 @@ namespace Sparq.UI
             // ── Solid OPAQUE backdrop — completely hides the legacy home scene
             //    behind the lobby. Trial card, scene art, world sprites, Sparq
             //    logo etc. all become invisible because this fills the screen.
-            //    Black so the lobby art stands out cleanly.
-            var bg = MakeImg(_root.transform, "Backdrop", new Color(0f, 0f, 0f, 1f));
+            //    Sky-blue gradient base for the procedural lobby; black for the
+            //    legacy prefab path (which renders its own art on top).
+            var bg = MakeImg(_root.transform, "Backdrop",
+                USE_PROCEDURAL_LOBBY ? new Color(0.55f, 0.78f, 0.94f, 1f)   // soft sky
+                                      : new Color(0f, 0f, 0f, 1f));
             var brt = bg.GetComponent<RectTransform>();
             brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
             brt.offsetMin = Vector2.zero; brt.offsetMax = Vector2.zero;
             // Backdrop is purely visual — let clicks pass through it to UI behind.
             bg.GetComponent<Image>().raycastTarget = false;
+
+            // ── Procedural lobby branch ─────────────────────────────────────
+            // The Layer Lab prefab carries hero showcase art + side rails +
+            // chat bubbles + brown frames we don't use; testers consistently
+            // call it cluttered. The procedural path builds a clean Sparq-
+            // identity lobby — tile grass floor (matches the explore map),
+            // a centered Owl mascot, scattered Tasty NPCs as ambient
+            // villagers, and one big "Today's Quest" CTA. Set
+            // USE_PROCEDURAL_LOBBY = false to fall back to the legacy prefab.
+            if (USE_PROCEDURAL_LOBBY)
+            {
+                BuildProceduralLobby();
+                DeclutterHomeScene();
+                // System runners + onboarding popups still fire — they're
+                // independent of the visual lobby shell.
+                try { Sparq.Systems.RemindAlertRunner.EnsureRunning(); } catch {}
+                try { Sparq.Systems.PetCareRunner.EnsureRunning(); } catch {}
+                try { Sparq.UI.UsernameEditPopup.ShowIfFirstTime(); } catch (System.Exception ex)
+                { Debug.LogWarning($"[HomeLobbyPanel] Username popup failed: {ex.Message}"); }
+                Debug.Log("[HomeLobbyPanel] Procedural lobby built.");
+                return;
+            }
 
             // ── Instantiate Lobby.prefab — Resources first (works in editor + APK),
             //    AssetDatabase fallback for fresh checkouts where the Resources
@@ -92,6 +237,15 @@ namespace Sparq.UI
             // Runtime-safe Instantiate (PrefabUtility.InstantiatePrefab is editor-only).
             var instance = GameObject.Instantiate(prefab, _root.transform);
             instance.name = "LobbyContent";
+
+            // Scene-baked leftovers in Home.unity that aren't children of the
+            // lobby canvas — they render every load regardless of panel state.
+            // The "TODAY'S TRIAL — Walk the Path" overlay, the floating
+            // PhoenixMascot, and a literal "Placeholder" GameObject. PLAY now
+            // routes to QuestsPanel so the trial card is redundant; the others
+            // were always visual noise. Disable, don't destroy, so the scene
+            // file stays untouched and recovery in the editor is trivial.
+            DeclutterHomeScene();
             // Make sure the prefab fills the canvas (Layer Lab prefabs are
             // typically authored at 1080x1920 already).
             var iRT = instance.GetComponent<RectTransform>();
@@ -305,6 +459,40 @@ namespace Sparq.UI
             #endif
         }
 
+        // Disable scene-baked GameObjects in Home.unity that the lobby
+        // shouldn't display anymore. These live as scene roots (not children
+        // of the lobby canvas) so HomeLobbyPanel.Hide() won't touch them and
+        // the panel's child-only declutter pass can't see them either. They
+        // were artifacts of an older "Today's Trial" overlay design — PLAY
+        // now opens QuestsPanel directly. Disable, don't destroy, so the
+        // scene file is untouched and the editor can revive them if needed.
+        private static readonly string[] STALE_SCENE_OBJECTS = {
+            "DailyTrialCard",   // the legacy "TODAY'S TRIAL" floating card
+            "PhoenixMascot",    // floating phoenix in dead space
+            "Placeholder",      // literal placeholder GameObject (white shape)
+            // (Biome_0_* / [Cinematic] / [Forest] were temporarily added when
+            //  testers landed on "portal-only with nothing on top" — but the
+            //  real cause was the hero sprite failing to render. The biome
+            //  backdrop IS part of the intended lobby art; the chibi
+            //  archer stands on it. Don't strip it.)
+        };
+        private static void DeclutterHomeScene()
+        {
+            int hidden = 0;
+            foreach (var name in STALE_SCENE_OBJECTS)
+            {
+                // GameObject.Find walks the whole active scene; OK here because
+                // it runs once per lobby show and the list is tiny.
+                var go = GameObject.Find(name);
+                if (go == null) continue;
+                go.SetActive(false);
+                hidden++;
+                Debug.Log($"[HomeLobbyPanel] DeclutterHomeScene: disabled '{name}'.");
+            }
+            if (hidden > 0)
+                Debug.Log($"[HomeLobbyPanel] DeclutterHomeScene: hid {hidden} stale scene object(s).");
+        }
+
         // Strip Layer Lab's prefab down to what we actually use.
         // PHASE 1: hide by visible TMP_Text content (most reliable — Layer
         //          Lab uses generic GameObject names like "Card" so name-
@@ -469,7 +657,11 @@ namespace Sparq.UI
                 "Icon_Trophy", "Icon_Badge", "Icon_Gift", "Icon_Ticket",  // banner icons
             };
 
-            // Safeguards — never hide these even if substring matches
+            // Safeguards — never hide these even if substring matches.
+            // Character + CharacterShadow restored after the aggressive cut
+            // broke the hero rendering on the lobby (testers landed on the
+            // portal arch with nothing on top of it). When the chibi renders
+            // properly the portal IS the intended backdrop.
             string[] keepExact =
             {
                 "Lobby", "Canvas", "Character", "CharacterShadow",
@@ -597,7 +789,7 @@ namespace Sparq.UI
                 containerImg.raycastTarget = true;
                 btn.onClick.AddListener(() => {
                     Debug.Log($"[HomeLobbyPanel] ✓ PLAY (text='{t}') tapped on '{containerImg.gameObject.name}'.");
-                    LaunchStageMap();
+                    LaunchDailyQuests();
                 });
                 added++;
                 Debug.Log($"[HomeLobbyPanel] Injected PLAY button on '{containerImg.gameObject.name}' (label='{t}')");
@@ -717,10 +909,16 @@ namespace Sparq.UI
                 // Match labels → routes
                 System.Action route = null;
                 if (label.Contains("PLAY") || label.Contains("START") ||
-                    label.Contains("BATTLE") || label.Contains("FIGHT") ||
                     label == "GO")
                 {
-                    route = LaunchStageMap;
+                    route = LaunchDailyQuests;
+                }
+                else if (label.Contains("BATTLE") || label.Contains("FIGHT"))
+                {
+                    // Combat-named buttons (BATTLE / FIGHT) still go straight
+                    // to the chapter map. Only PLAY / START / GO are the
+                    // "primary lobby action" buttons that now open quests.
+                    route = () => { Hide(); try { Sparq.UI.StageMapPanel.Show(); } catch {} };
                 }
                 else if (label.Contains("BEGIN"))
                 {
@@ -2407,7 +2605,7 @@ namespace Sparq.UI
                 int captured = wired;
                 btn.onClick.AddListener(() => {
                     Debug.Log($"[HomeLobbyPanel] ✓ PLAY/Start button {captured} '{btn.gameObject.name}' fired.");
-                    LaunchStageMap();
+                    LaunchDailyQuests();
                 });
                 wired++;
                 Debug.Log($"[HomeLobbyPanel] Wired PLAY-ish button: '{n}' text='{txt}'");
@@ -2415,11 +2613,22 @@ namespace Sparq.UI
             Debug.Log($"[HomeLobbyPanel] Wired {wired} PLAY/BATTLE button(s).");
         }
 
-        private static void LaunchStageMap()
+        // PLAY now opens the Daily Quests sheet — ADHD/autism wellness tasks
+        // (two-minute start, sensory reset, transition buffer, hyperfocus
+        // capture, etc.) are Sparq's whole point and testers couldn't find
+        // them when PLAY routed straight to combat. The chapter map / battles
+        // are still one tap away via the left-rail MAP hex → StageMapPanel.
+        private static void LaunchDailyQuests()
         {
+            // DO NOT call Hide() here. QuestsPanel is a MODAL — it spawns its
+            // own dim-backdrop canvas at high sortingOrder ON TOP of the
+            // lobby. If we destroy the lobby canvas before opening it, then
+            // when the user taps X and QuestsPanel destroys ITS canvas, there's
+            // nothing underneath — the user lands on the bare Home.unity
+            // scene-baked elements (portal art, placeholder squares, "?"
+            // debug). That's the "old lobby" testers kept reporting.
             try { Sparq.Audio.SoundManager.Play(Sparq.Audio.SoundManager.Sfx.Click); } catch {}
-            Hide();
-            Sparq.UI.StageMapPanel.Show();
+            Sparq.UI.QuestsPanel.Show();
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -3327,6 +3536,230 @@ namespace Sparq.UI
             go.transform.SetParent(parent, false);
             go.GetComponent<Image>().color = color;
             return go;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PROCEDURAL LOBBY  (gated by USE_PROCEDURAL_LOBBY)
+        // ═══════════════════════════════════════════════════════════════════
+        // Builds the new Sparq home lobby from scratch under _root, without
+        // instantiating Layer Lab's busy hero-showcase prefab. Layout
+        // (1080×1920 reference, anchored to the canvas center):
+        //
+        //   ┌─────────────────────────────────┐ y=+960
+        //   │ currency strip · settings hex   │
+        //   │                                 │
+        //   │   (sky / open space)            │
+        //   │                                 │
+        //   │   NPC          NPC              │
+        //   │       OWL  ←  mascot            │ y≈ -100
+        //   │   NPC                           │
+        //   │                                 │
+        //   │   [ TODAY'S QUEST card ]        │ y≈ -700
+        //   │                                 │
+        //   │   (BottomNavBar lives here)     │ y=-960
+        //   └─────────────────────────────────┘
+        //
+        // Tile floor (TileTerrain.BuildGround) covers the bottom 65% so the
+        // mascot stands on grass continuous with the explore map.
+        private static void BuildProceduralLobby()
+        {
+            // Container under the host canvas — easier to clean / restyle.
+            var lobby = new GameObject("ProcLobby", typeof(RectTransform));
+            lobby.transform.SetParent(_root.transform, false);
+            var lrt = lobby.GetComponent<RectTransform>();
+            lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+            lrt.offsetMin = Vector2.zero; lrt.offsetMax = Vector2.zero;
+
+            // Tile grass floor — bottom 65% of the canvas. The TileTerrain
+            // helper from the explore map gives instant continuity with the
+            // outdoor look the player just left.
+            var floor = new GameObject("Floor", typeof(RectTransform));
+            floor.transform.SetParent(lobby.transform, false);
+            var frt = floor.GetComponent<RectTransform>();
+            frt.anchorMin = new Vector2(0f, 0f); frt.anchorMax = new Vector2(1f, 0.65f);
+            frt.offsetMin = Vector2.zero; frt.offsetMax = Vector2.zero;
+            // BuildGround sizes the carpet to the rect — feed it the canvas
+            // reference dimensions × the relative anchor span.
+            Sparq.UI.TileTerrain.BuildGround(frt, 1080f, 1920f * 0.65f,
+                                             "forest", Color.white, "lobby".GetHashCode());
+
+            // Centered Owl mascot — anchored above the floor, pivot at its
+            // feet so it visually sits on the grass.
+            var owl = LoadResourcesSprite("Mascots/Owl");
+            if (owl != null)
+            {
+                var owlGO = new GameObject("OwlMascot", typeof(RectTransform), typeof(Image));
+                owlGO.transform.SetParent(lobby.transform, false);
+                var ort = owlGO.GetComponent<RectTransform>();
+                ort.anchorMin = new Vector2(0.5f, 0f);
+                ort.anchorMax = new Vector2(0.5f, 0f);
+                ort.pivot     = new Vector2(0.5f, 0f);
+                ort.anchoredPosition = new Vector2(0f, 600f);    // sits ~600px above the bottom
+                ort.sizeDelta = new Vector2(540f, 480f);          // big — the focal point
+                var oImg = owlGO.GetComponent<Image>();
+                oImg.sprite = owl;
+                oImg.preserveAspect = true;
+                oImg.raycastTarget = false;
+            }
+            else Debug.LogWarning("[HomeLobbyPanel] Owl mascot missing from Resources/Mascots/Owl.png");
+
+            // Three ambient Tasty Forest NPCs scattered around the owl — feels
+            // like a village, not a void. Smaller than the owl so the focal
+            // hierarchy is clear (owl > NPCs).
+            SpawnAmbientNpc(lobby.transform, "Tasty_Characters/Forest_0",  new Vector2(-340f,  520f), 200f);
+            SpawnAmbientNpc(lobby.transform, "Tasty_Characters/Forest_2",  new Vector2( 340f,  540f), 220f);
+            SpawnAmbientNpc(lobby.transform, "Tasty_Characters/Forest_5",  new Vector2(-150f,  330f), 200f);
+
+            // Big "Today's Quest" CTA — the single primary action. Anchored
+            // just above the BottomNavBar so it's the obvious tap target.
+            BuildBigQuestCTA(lobby.transform);
+
+            // Top strip: currency + settings hex.
+            BuildTopStrip(lobby.transform);
+        }
+
+        // Drop one Tasty NPC at a fixed canvas-center-relative position.
+        // Pivot bottom so it stands on the grass; smaller than the owl so
+        // the visual hierarchy reads "owl is the star, these are extras".
+        private static void SpawnAmbientNpc(Transform parent, string resKey, Vector2 pos, float height)
+        {
+            var sp = LoadResourcesSprite(resKey);
+            if (sp == null) { Debug.LogWarning($"[HomeLobbyPanel] NPC sprite missing: {resKey}"); return; }
+            var go = new GameObject("Npc_" + resKey.Substring(resKey.LastIndexOf('/') + 1),
+                                    typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0f);
+            rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot     = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = pos;
+            // Aspect-preserving sizeDelta — width is derived from the sprite ratio.
+            float aspect = sp.rect.width / Mathf.Max(1f, sp.rect.height);
+            rt.sizeDelta = new Vector2(height * aspect, height);
+            var img = go.GetComponent<Image>();
+            img.sprite = sp;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+        }
+
+        // The single big call-to-action: opens the daily-quest list. PLAY
+        // text routes to the same place via WireByTextLabel in the legacy
+        // path, but the procedural lobby owns its own button — no need to
+        // hunt prefab text labels.
+        private static void BuildBigQuestCTA(Transform parent)
+        {
+            var card = new GameObject("QuestCTA",
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            card.transform.SetParent(parent, false);
+            var rt = card.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0f);
+            rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot     = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(0f, 240f);     // above the bottom nav
+            rt.sizeDelta = new Vector2(880f, 220f);
+            var bg = card.GetComponent<Image>();
+            bg.color = new Color(1.00f, 0.82f, 0.30f, 1f);    // honey gold — same as Send btn
+            // Header strip
+            var header = new GameObject("Header", typeof(RectTransform), typeof(Image));
+            header.transform.SetParent(card.transform, false);
+            var hrt = header.GetComponent<RectTransform>();
+            hrt.anchorMin = new Vector2(0f, 1f);
+            hrt.anchorMax = new Vector2(1f, 1f);
+            hrt.pivot     = new Vector2(0.5f, 1f);
+            hrt.anchoredPosition = new Vector2(0f, 0f);
+            hrt.sizeDelta = new Vector2(0f, 64f);
+            header.GetComponent<Image>().color = new Color(0.42f, 0.22f, 0.68f, 1f);   // fuchsia
+            var headLbl = MakeText(header.transform, "L", "TODAY'S QUESTS",
+                30, FontStyles.Bold, new Color(1.00f, 0.97f, 0.85f, 1f));
+            var hlrt = (RectTransform)headLbl.transform;
+            hlrt.anchorMin = Vector2.zero; hlrt.anchorMax = Vector2.one;
+            hlrt.offsetMin = Vector2.zero; hlrt.offsetMax = Vector2.zero;
+            // Big body label
+            var body = MakeText(card.transform, "Body", "Tap to see today's set",
+                36, FontStyles.Bold, new Color(0.13f, 0.10f, 0.20f, 1f));
+            var bRT = (RectTransform)body.transform;
+            bRT.anchorMin = new Vector2(0f, 0f);
+            bRT.anchorMax = new Vector2(1f, 1f);
+            bRT.offsetMin = new Vector2(20f, 20f);
+            bRT.offsetMax = new Vector2(-20f, -70f);
+            // Wire to the same launcher PLAY used.
+            var btn = card.GetComponent<Button>();
+            btn.targetGraphic = bg;
+            btn.onClick.AddListener(LaunchDailyQuests);
+        }
+
+        // Top strip: currency on the left, settings hex on the right.
+        // Kept minimal — top-of-screen is real estate the eye dismisses
+        // quickly, so anything heavier than counters is noise.
+        private static void BuildTopStrip(Transform parent)
+        {
+            var data = Sparq.Core.SaveService.Data;
+            int coins = data != null ? data.sparqCoins : 0;
+
+            var strip = new GameObject("TopStrip", typeof(RectTransform));
+            strip.transform.SetParent(parent, false);
+            var srt = strip.GetComponent<RectTransform>();
+            srt.anchorMin = new Vector2(0f, 1f);
+            srt.anchorMax = new Vector2(1f, 1f);
+            srt.pivot     = new Vector2(0.5f, 1f);
+            srt.anchoredPosition = new Vector2(0f, -32f);
+            srt.sizeDelta = new Vector2(-32f, 96f);
+
+            // Coin counter pill
+            var pill = new GameObject("CoinPill", typeof(RectTransform), typeof(Image));
+            pill.transform.SetParent(strip.transform, false);
+            var prt = pill.GetComponent<RectTransform>();
+            prt.anchorMin = new Vector2(0f, 0.5f);
+            prt.anchorMax = new Vector2(0f, 0.5f);
+            prt.pivot     = new Vector2(0f, 0.5f);
+            prt.anchoredPosition = new Vector2(0f, 0f);
+            prt.sizeDelta = new Vector2(280f, 76f);
+            pill.GetComponent<Image>().color = new Color(0.20f, 0.16f, 0.30f, 0.92f);
+            var coinTxt = MakeText(pill.transform, "Lbl", $"⌬  {coins:N0}",
+                34, FontStyles.Bold, new Color(1.00f, 0.82f, 0.30f, 1f));
+            var ctRT = (RectTransform)coinTxt.transform;
+            ctRT.anchorMin = Vector2.zero; ctRT.anchorMax = Vector2.one;
+            ctRT.offsetMin = new Vector2(18f, 0f); ctRT.offsetMax = new Vector2(-18f, 0f);
+            coinTxt.alignment = TextAlignmentOptions.MidlineLeft;
+
+            // Settings hex (top-right) — opens SettingsPanel. The legacy path
+            // injected this into the prefab; here we own it directly.
+            var settings = new GameObject("SettingsHex",
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            settings.transform.SetParent(strip.transform, false);
+            var stRT = settings.GetComponent<RectTransform>();
+            stRT.anchorMin = new Vector2(1f, 0.5f);
+            stRT.anchorMax = new Vector2(1f, 0.5f);
+            stRT.pivot     = new Vector2(1f, 0.5f);
+            stRT.anchoredPosition = new Vector2(0f, 0f);
+            stRT.sizeDelta = new Vector2(76f, 76f);
+            settings.GetComponent<Image>().color = new Color(0.20f, 0.16f, 0.30f, 0.92f);
+            var gear = MakeText(settings.transform, "G", "⚙",
+                42, FontStyles.Bold, new Color(0.99f, 0.99f, 0.98f, 1f));
+            var grRT = (RectTransform)gear.transform;
+            grRT.anchorMin = Vector2.zero; grRT.anchorMax = Vector2.one;
+            grRT.offsetMin = Vector2.zero; grRT.offsetMax = Vector2.zero;
+            settings.GetComponent<Button>().onClick.AddListener(() => {
+                try { Sparq.Audio.SoundManager.Play(Sparq.Audio.SoundManager.Sfx.Click); } catch {}
+                try { Sparq.UI.SettingsPanel.Show(); } catch (System.Exception ex)
+                { Debug.LogError($"[HomeLobbyPanel] SettingsPanel.Show failed: {ex.Message}"); }
+            });
+        }
+
+        // Resources.Load wrapper that strips the leading slash/extension if a
+        // caller passed a full Asset path by mistake. Keeps callers terse.
+        private static Sprite LoadResourcesSprite(string resKey)
+        {
+            if (string.IsNullOrEmpty(resKey)) return null;
+            // First try as a plain Sprite asset (sliced sub-sprites from atlases).
+            var sp = Resources.Load<Sprite>(resKey);
+            if (sp != null) return sp;
+            // Fallback: load the raw Texture2D and wrap it as a Sprite at its
+            // full extent. Catches PNGs that were imported as plain textures.
+            var tex = Resources.Load<Texture2D>(resKey);
+            if (tex == null) return null;
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                                 new Vector2(0.5f, 0.5f), 100f);
         }
 
         private static TMP_Text MakeText(Transform parent, string name, string text,

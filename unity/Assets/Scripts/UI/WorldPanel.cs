@@ -695,7 +695,12 @@ namespace Sparq.UI
 
             foreach (var m in messages) BuildChatMsgRow(list.transform, m);
 
-            // Input bar — warm cream pill with brown placeholder, brown send button
+            // Input bar — warm cream pill with a REAL TMP_InputField. Used
+            // to be just a TMP_Text label that read "Tap to enter..." with a
+            // dead Send button — testers (rightly) reported they couldn't
+            // type. Now: tap the pill → soft keyboard opens; press Send (or
+            // the keyboard's Send/Done) → message appends to the list and
+            // the ScrollRect snaps to the bottom.
             var input = new GameObject("Input", typeof(RectTransform), typeof(Image));
             input.transform.SetParent(root.transform, false);
             var irt = input.GetComponent<RectTransform>();
@@ -707,21 +712,156 @@ namespace Sparq.UI
             inImg.sprite = LoadRoundedSprite(14);
             inImg.type = Image.Type.Sliced;
             inImg.color = new Color(1f, 0.84f, 0.50f, 1f);       // honey input
-            MakeText(input.transform, "P", "Tap to enter...",
+
+            // TMP_InputField needs a text component + placeholder component.
+            // We anchor them to the LEFT region of the pill (the right side is
+            // reserved for the Send button) — left=20, right=-120 matches the
+            // old label layout.
+            var fieldTextTMP = MakeText(input.transform, "Text", "",
+                22, FontStyles.Normal, new Color(0.30f, 0.20f, 0.10f, 1f),
+                new Vector2(0, 0.5f), new Vector2(1, 0.5f),
+                new Vector2(20, 0), new Vector2(-120, 36));
+            fieldTextTMP.alignment = TextAlignmentOptions.MidlineLeft;
+            ((TMP_Text)fieldTextTMP).richText = false;
+
+            var placeholderTMP = MakeText(input.transform, "Placeholder", "Tap to enter...",
                 22, FontStyles.Italic, new Color(0.55f, 0.32f, 0.18f, 0.9f),
                 new Vector2(0, 0.5f), new Vector2(1, 0.5f),
-                new Vector2(20, 0), new Vector2(-120, 36))
-                .alignment = TextAlignmentOptions.MidlineLeft;
+                new Vector2(20, 0), new Vector2(-120, 36));
+            placeholderTMP.alignment = TextAlignmentOptions.MidlineLeft;
+
+            var field = input.AddComponent<TMPro.TMP_InputField>();
+            field.textViewport       = irt;
+            field.textComponent      = (TMP_Text)fieldTextTMP;
+            field.placeholder        = placeholderTMP;
+            field.lineType           = TMPro.TMP_InputField.LineType.SingleLine;
+            field.characterLimit     = 240;
+            field.restoreOriginalTextOnEscape = false;
+
             var send = MakeBtn(input.transform, "Send", "Send",
                 new Vector2(1, 0.5f), new Vector2(1, 0.5f),
                 new Vector2(-12, 0), new Vector2(100, 50),
                 GOLD, DEEP_NAVY, 22);
             var sndImg = send.GetComponent<Image>();
             sndImg.sprite = LoadRoundedSprite(12); sndImg.type = Image.Type.Sliced;
-            send.onClick.AddListener(() =>
+
+            // Capture the list + scroll so the send closure can append + scroll.
+            var listTransform = list.transform;
+            var listRect      = lrt;
+            var scrollRect    = srcomp;
+            var rootCanvas    = root.GetComponentInParent<Canvas>();
+            // Floating-toast helper for moderator messages — uses the existing
+            // XPFloater so safety feedback lives in the same visual language as
+            // XP rewards. Color encodes severity: gold=warn, red=blocked.
+            System.Action<string, Color> showSafetyToast = (text, color) =>
             {
+                try
+                {
+                    if (rootCanvas != null && send != null)
+                        XPFloater.Spawn(rootCanvas.transform,
+                            send.transform.position + new Vector3(0, 80, 0),
+                            text, color);
+                } catch {}
+            };
+
+            System.Action sendMessage = () =>
+            {
+                string body = (field.text ?? "").Trim();
+                if (body.Length == 0) return;
+
+                // ── RATE LIMIT (mute / per-msg throttle) ─────────────────────
+                // Same gate ChatSender uses. Cheap; runs before moderation so
+                // a muted user can't waste cycles trying.
+                if (!Sparq.Safety.RateLimiter.CanSend(out string rateReason))
+                {
+                    Debug.LogWarning($"[WorldPanel] Rate-limited: {rateReason}");
+                    showSafetyToast(rateReason, new Color(0.85f, 0.45f, 0.30f, 1f));
+                    return;
+                }
+
+                // ── CONTENT MODERATION (5-layer) ─────────────────────────────
+                // Mirrors ChatSender.Send(). Required: without this, World
+                // chat bypasses PII filtering, grooming detection, self-harm
+                // crisis-resources auto-popup, and harassment blocking — the
+                // entire ContentModerator stack. Regression from the rushed
+                // input wiring earlier today; must NOT regress again.
+                var verdict = Sparq.Safety.ContentModerator.Inspect(body, "chat");
+                if (!verdict.Allowed)
+                {
+                    Debug.LogWarning($"[WorldPanel] Blocked outgoing message: {verdict.UserFacingMessage}");
+                    // ThreatViolence has its own dedicated panel (firm tone +
+                    // 911 / Crisis Text Line). For everything else we surface
+                    // the inline toast with the moderator's user-facing
+                    // explanation. We branch first to avoid the empty
+                    // UserFacingMessage on threat (intentionally empty —
+                    // the panel speaks for itself).
+                    if (verdict.Reasons.Contains(
+                            Sparq.Safety.ContentModerator.Category.ThreatViolence)
+                        && !Sparq.UI.ThreatResponsePanel.RecentlyDismissed())
+                    {
+                        try { Sparq.UI.ThreatResponsePanel.Show(); } catch {}
+                    }
+                    else
+                    {
+                        showSafetyToast(verdict.UserFacingMessage,
+                                        new Color(0.85f, 0.30f, 0.30f, 1f));
+                    }
+                    // Keep cursor in field but swap to sanitized text so any
+                    // PII is hidden if the screen is shared / over-the-shoulder.
+                    field.text = verdict.SanitizedText ?? "";
+
+                    // Even though the message was BLOCKED, if the user expressed
+                    // self-harm ideation that's a reach-out — surface help
+                    // resources before returning. (RecentlyDismissed() throttles
+                    // so we never badger.)
+                    if (verdict.Reasons.Contains(
+                            Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
+                        && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
+                    {
+                        try { Sparq.UI.CrisisResourcesPanel.Show(); } catch {}
+                    }
+                    return;
+                }
+                // Warn-level: send the sanitized version + surface the warning.
+                body = verdict.SanitizedText ?? body;
+                if (verdict.Severity == Sparq.Safety.ContentModerator.Severity.Warn
+                    && !string.IsNullOrEmpty(verdict.UserFacingMessage))
+                {
+                    showSafetyToast(verdict.UserFacingMessage,
+                                    new Color(1f, 0.78f, 0.30f, 1f));
+                }
+
                 try { Sparq.Audio.SoundManager.Play(Sparq.Audio.SoundManager.Sfx.Click); } catch {}
-            });
+                var data = Sparq.Core.SaveService.Data;
+                string author = (data != null && !string.IsNullOrEmpty(data.playerName))
+                    ? data.playerName : "You";
+                BuildChatMsgRow(listTransform, new ChatMsg {
+                    author = author, text = body, fromMe = true,
+                    tint   = new Color(0.55f, 0.78f, 0.42f),
+                });
+                field.text = "";
+                field.ActivateInputField();   // keep keyboard up for the next line
+                // ContentSizeFitter needs a tick to recalc — force it now so
+                // the scroll-to-bottom lands on the new message, not above it.
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(listRect);
+                if (scrollRect != null) scrollRect.verticalNormalizedPosition = 0f;
+                Sparq.Safety.RateLimiter.RecordSend();
+
+                // Crisis-resources auto-popup on self-harm ideation that
+                // passed moderation (the original message still sent — their
+                // friend in chat might be exactly the help they need). Same
+                // throttle as the blocked-path branch above.
+                if (verdict.Reasons.Contains(
+                        Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
+                    && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
+                {
+                    try { Sparq.UI.CrisisResourcesPanel.Show(); }
+                    catch (System.Exception ex)
+                    { Debug.LogError($"[WorldPanel] Crisis panel open failed: {ex.Message}"); }
+                }
+            };
+            send.onClick.AddListener(() => sendMessage());
+            field.onSubmit.AddListener(_ => sendMessage());
 
             return root;
         }

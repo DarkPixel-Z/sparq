@@ -41,8 +41,21 @@ namespace Sparq.UI
             if (!verdict.Allowed)
             {
                 Debug.LogWarning($"[ChatSender] Blocked outgoing message: {verdict.UserFacingMessage}");
-                ShowSafetyToast(verdict.UserFacingMessage,
-                    new Color(0.85f, 0.30f, 0.30f, 1f));
+                // ThreatViolence opens the firm-tone ThreatResponsePanel
+                // (911 + Crisis Text Line guidance). Everything else uses
+                // the inline toast with the moderator's user-facing
+                // explanation. UserFacingMessage is intentionally empty for
+                // ThreatViolence — the panel speaks for itself.
+                if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.ThreatViolence)
+                    && !Sparq.UI.ThreatResponsePanel.RecentlyDismissed())
+                {
+                    try { Sparq.UI.ThreatResponsePanel.Show(); } catch {}
+                }
+                else
+                {
+                    ShowSafetyToast(verdict.UserFacingMessage,
+                        new Color(0.85f, 0.30f, 0.30f, 1f));
+                }
                 // Don't clear input — let user revise. But hide PII just in
                 // case the field is screen-shared.
                 input.text = verdict.SanitizedText;

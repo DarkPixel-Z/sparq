@@ -67,17 +67,20 @@ namespace Sparq.Systems
         private const string SFX_HEAL     = LEO + "8_Buffs_Heals_SFX/02_Heal_02.wav";
         private const string SFX_CONFIRM  = LEO + "10_UI_Menu_SFX/013_Confirm_03.wav";
 
-        // BGM
-        private const string BGM_DIR = "Assets/Action RPG Music 1.6/";
+        // BGM — Resources/Audio paths (no extension, no "Assets/Resources/"
+        // prefix). Only one track per category is in Resources to keep the
+        // APK size sane (each track ~10–13 MB; the four-track rotation cost
+        // 50+ MB). Full set still lives at Assets/Action RPG Music 1.6/ for
+        // the editor; if you want more variety in production, copy the
+        // missing tracks into Assets/Resources/Audio/ and extend the array.
         private static readonly string[] BGM_BATTLE = {
-            BGM_DIR + "BGM07battle1.wav", BGM_DIR + "BGM07battle2.wav",
-            BGM_DIR + "BGM07battle3.wav", BGM_DIR + "BGM07battle4.wav",
+            "Audio/BGM07battle1",
         };
         private static readonly string[] BGM_BOSS = {
-            BGM_DIR + "BGM08boss1.wav", BGM_DIR + "BGM08boss2.wav",
+            "Audio/BGM08boss1",
         };
-        private const string MS_VICTORY = BGM_DIR + "MS01triumph1NL.wav";
-        private const string MS_DEFEAT  = BGM_DIR + "MS02gameover1NL.wav";
+        private const string MS_VICTORY = "Audio/MS01triumph1NL";
+        private const string MS_DEFEAT  = "Audio/MS02gameover1NL";
 
         // ═══════════════════════════════════════════════════════════════════
         // FIGHTER MODEL
@@ -293,16 +296,15 @@ namespace Sparq.Systems
                 _music.loop = true; _music.volume = 0.70f;
             }
 
-            // BGM
-            #if UNITY_EDITOR
+            // BGM — Resources.Load works in both Editor + Player builds.
+            // Previously the whole load was #if UNITY_EDITOR which meant
+            // battles ran silent in every APK.
             string bgmPath = bossEncounter
                 ? BGM_BOSS[Random.Range(0, BGM_BOSS.Length)]
                 : BGM_BATTLE[Random.Range(0, BGM_BATTLE.Length)];
-            // Streaming + Vorbis prevents choppy playback on big WAVs
-            Sparq.UI.HomeBgm.ConfigureForStreaming(bgmPath);
-            var bgm = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(bgmPath);
+            var bgm = Resources.Load<AudioClip>(bgmPath);
             if (bgm != null) { _music.clip = bgm; _music.Play(); }
-            #endif
+            else Debug.LogWarning($"[SquadBattle] BGM not found: Resources/{bgmPath}");
 
             // Pause home BGM so it doesn't bleed into battle
             try { Sparq.UI.HomeBgm.Pause(); } catch {}
@@ -3115,13 +3117,28 @@ namespace Sparq.Systems
             return arr.ToArray();
         }
 
-        private static void PlayAudio(string assetPath, float volume)
+        private static void PlayAudio(string path, float volume)
         {
             if (_audio == null) return;
+            // Accept either form:
+            //   "Audio/XYZ"             → Resources.Load (works in Player builds)
+            //   "Assets/Pack/XYZ.wav"   → AssetDatabase (editor-only legacy SFX
+            //                              constants that haven't been migrated)
+            // BGM + victory/defeat use the Resources form; the per-attack
+            // SFX constants still use the legacy editor-only form. Migrate
+            // them when shipping for production. For now, the editor path
+            // is gated so it compiles in Player builds and SFX simply go
+            // silent there until migrated.
+            AudioClip clip = null;
+            if (!path.StartsWith("Assets/"))
+            {
+                clip = Resources.Load<AudioClip>(path);
+            }
             #if UNITY_EDITOR
-            var clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(assetPath);
-            if (clip != null) _audio.PlayOneShot(clip, volume);
+            if (clip == null && path.StartsWith("Assets/"))
+                clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(path);
             #endif
+            if (clip != null) _audio.PlayOneShot(clip, volume);
         }
 
         private static IEnumerator DelayedAudio(string path, float delay, float vol)

@@ -47,6 +47,23 @@ namespace Sparq.UI
         private static readonly Color CREAM      = new Color(1.00f, 0.97f, 0.85f, 1f);
         private static readonly Color GREY       = new Color(0.75f, 0.75f, 0.80f, 1f);
 
+        // ── Light theme — used when QuestsPanel is rendered as the HOME ──
+        // Mirrors the Finch-style reference the user picked: cream page bg,
+        // white rounded quest cards, soft-grey icon container, dark title
+        // text, amber lightning-bolt + number for XP, green checkmark for the
+        // complete button.
+        private static readonly Color L_BG          = new Color(0.94f, 0.94f, 0.94f, 1f);
+        private static readonly Color L_CARD        = new Color(1.00f, 1.00f, 1.00f, 1f);
+        private static readonly Color L_ICON_PAD    = new Color(0.92f, 0.92f, 0.94f, 1f);
+        private static readonly Color L_TITLE_BAR   = new Color(0.97f, 0.97f, 0.97f, 1f);
+        private static readonly Color L_TITLE_TEXT  = new Color(0.16f, 0.18f, 0.22f, 1f);
+        private static readonly Color L_BODY_TEXT   = new Color(0.20f, 0.22f, 0.26f, 1f);
+        private static readonly Color L_SUB_TEXT    = new Color(0.40f, 0.42f, 0.46f, 1f);
+        private static readonly Color L_BOLT        = new Color(0.95f, 0.62f, 0.20f, 1f);
+        private static readonly Color L_CHECK_BG    = new Color(0.94f, 0.94f, 0.96f, 1f);
+        private static readonly Color L_CHECK_GREEN = new Color(0.30f, 0.78f, 0.42f, 1f);
+        private static readonly Color L_SECTION     = new Color(0.36f, 0.40f, 0.46f, 1f);
+
         // ── Tab state ────────────────────────────────────────────────────
         public enum Tab { Daily, Weekly, Achievements }
         private static Tab _currentTab = Tab.Daily;
@@ -84,60 +101,122 @@ namespace Sparq.UI
         // PUBLIC API
         // ─────────────────────────────────────────────────────────────────
 
-        public static void Show()
+        // When true, the panel renders as the HOME SCREEN rather than as a
+        // modal popup over the lobby:
+        //   - no dim backdrop, no tap-to-close
+        //   - low sortingOrder so the BottomNavBar (at 5000) sits above it
+        //   - no close-X button on the title bar
+        //   - Hide() becomes a no-op (HOME is permanent until the user
+        //     navigates to another tab)
+        //   - card fills the full screen with only status-bar + nav-bar
+        //     reservations at the edges
+        // Set by Show(asHome:true) and read by BuildTitleBar / Hide.
+        private static bool _isHomeMode;
+
+        public static void Show() => Show(asHome: false);
+
+        public static void Show(bool asHome)
         {
-            if (_root != null) { Hide(); return; }
+            // If we're already rendered AS HOME, ANY re-Show — whether the
+            // caller passed asHome:true (HOME tab) or asHome:false (the
+            // BottomNavBar's QUESTS tab calls Show() with no arg) — should
+            // just rebuild the list, not destroy + rebuild the canvas. The
+            // home view IS the quest view; there's nothing to switch to.
+            if (_root != null && _isHomeMode)
+            {
+                RebuildList();
+                return;
+            }
+            if (_root != null) { Hide(force: true); }
+            _isHomeMode = asHome;
             EnsureEventSystem();
             try { QuestManager.Instance?.CheckDailyReset(); } catch {}
 
-            // Canvas root, sortingOrder above lobby & journal.
             _root = new GameObject("Sparq_QuestsPanel",
                 typeof(RectTransform), typeof(Canvas),
                 typeof(CanvasScaler), typeof(GraphicRaycaster));
             var rrt = _root.GetComponent<RectTransform>(); Stretch(rrt);
             var canv = _root.GetComponent<Canvas>();
             canv.renderMode = RenderMode.ScreenSpaceOverlay;
-            int maxSort = 15000;
-            foreach (var other in UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
-                if (other != null && other.gameObject != _root && other.sortingOrder > maxSort)
-                    maxSort = other.sortingOrder;
-            canv.sortingOrder = maxSort + 20;
+            if (asHome)
+            {
+                // Sit BELOW BottomNavBar (sort 5000) so the nav stays tappable
+                // on top of us. Above 0 so popups/toasts still cover us.
+                canv.sortingOrder = 100;
+            }
+            else
+            {
+                // Modal: float above everything currently on screen.
+                int maxSort = 15000;
+                foreach (var other in UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                    if (other != null && other.gameObject != _root && other.sortingOrder > maxSort)
+                        maxSort = other.sortingOrder;
+                canv.sortingOrder = maxSort + 20;
+            }
             var cs = _root.GetComponent<CanvasScaler>();
             cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             cs.referenceResolution = new Vector2(1080, 1920);
             cs.matchWidthOrHeight = 0.5f;
 
-            // Dim — tap outside to close
-            var dim = NewGO("Dim", _root.transform, typeof(Image), typeof(Button));
-            Stretch(dim.GetComponent<RectTransform>());
-            dim.GetComponent<Image>().color = new Color(0, 0, 0, 0.82f);
-            dim.GetComponent<Button>().onClick.AddListener(Hide);
+            // Dim backdrop only in modal mode — at HOME the panel IS the screen,
+            // there's nothing to dim. We also drop the tap-to-close behaviour.
+            if (!asHome)
+            {
+                var dim = NewGO("Dim", _root.transform, typeof(Image), typeof(Button));
+                Stretch(dim.GetComponent<RectTransform>());
+                dim.GetComponent<Image>().color = new Color(0, 0, 0, 0.82f);
+                dim.GetComponent<Button>().onClick.AddListener(Hide);
+            }
 
-            // Card stack: outer stroke + inner body
-            var stroke = MakeRounded("Stroke", _root.transform, STROKE);
+            // Card layout: modal uses inset margins for the dim border;
+            // home mode fills the screen with just status-bar + nav-bar
+            // reservations so the list maximises vertical real-estate.
+            var stroke = MakeRounded("Stroke", _root.transform, asHome ? L_BG : STROKE);
             var srt = stroke.GetComponent<RectTransform>();
             srt.anchorMin = new Vector2(0, 0); srt.anchorMax = new Vector2(1, 1);
-            srt.offsetMin = new Vector2(36, 140); srt.offsetMax = new Vector2(-36, -90);
-
-            var card = MakeRounded("Card", _root.transform, CARD_BG);
+            var card = MakeRounded("Card", _root.transform, asHome ? L_BG : CARD_BG);
             var crt = card.GetComponent<RectTransform>();
             crt.anchorMin = new Vector2(0, 0); crt.anchorMax = new Vector2(1, 1);
-            crt.offsetMin = new Vector2(44, 148); crt.offsetMax = new Vector2(-44, -98);
+            if (asHome)
+            {
+                // 130px top = status-bar + TopCurrencyBar room (110 + status),
+                // 200px bottom = BottomNavBar room.
+                srt.offsetMin = new Vector2(0,  200); srt.offsetMax = new Vector2(0,  -130);
+                crt.offsetMin = new Vector2(8,  208); crt.offsetMax = new Vector2(-8, -138);
+            }
+            else
+            {
+                srt.offsetMin = new Vector2(36, 140); srt.offsetMax = new Vector2(-36, -90);
+                crt.offsetMin = new Vector2(44, 148); crt.offsetMax = new Vector2(-44, -98);
+            }
 
             BuildTitleBar(card.transform);
-            BuildStreakBanner(card.transform);
-            BuildTabStrip(card.transform);
+            // The reference home design (Finch-style) drops the streak banner
+            // and the Daily/Weekly/Achievements tab strip — sections inside
+            // the scroll list take over the grouping role. Skip those two in
+            // home mode to keep the view scannable.
+            if (!asHome)
+            {
+                BuildStreakBanner(card.transform);
+                BuildTabStrip(card.transform);
+            }
             BuildScrollList(card.transform);
-            BuildBottomBar(card.transform);
+            if (!asHome) BuildBottomBar(card.transform);
 
             Subscribe();
             RebuildList();
 
-            Debug.Log("[QuestsPanel] Opened.");
+            Debug.Log($"[QuestsPanel] Opened (asHome={asHome}).");
         }
 
-        public static void Hide()
+        public static void Hide() => Hide(force: false);
+
+        public static void Hide(bool force)
         {
+            // In HOME mode the panel is the home screen — refuse to close
+            // unless the caller explicitly forces it (e.g., re-show with
+            // different asHome flag, or a navigation tab switching us out).
+            if (_isHomeMode && !force) return;
             Unsubscribe();
             if (_root != null) { UnityEngine.Object.Destroy(_root); _root = null; }
             _listParent = null;
@@ -165,22 +244,34 @@ namespace Sparq.UI
             rt.pivot = new Vector2(0.5f, 1);
             rt.anchoredPosition = new Vector2(0, 0);
             rt.sizeDelta = new Vector2(0, 120);
-            bar.GetComponent<Image>().color = TITLE_BG;
+            bar.GetComponent<Image>().color = _isHomeMode ? L_TITLE_BAR : TITLE_BG;
 
-            var title = MakeText(bar.transform, "Title", "QUESTS", 56, FontStyles.Bold, CREAM);
+            // Title text: in home mode, surface the "X goals left for today!"
+            // status that the reference uses instead of a static "QUESTS" label.
+            string titleText = _isHomeMode ? GetGoalsRemainingText() : "QUESTS";
+            var title = MakeText(bar.transform, "Title", titleText,
+                                 _isHomeMode ? 42 : 56,
+                                 FontStyles.Bold,
+                                 _isHomeMode ? L_TITLE_TEXT : CREAM);
             Stretch(title.rectTransform); title.alignment = TextAlignmentOptions.Center;
-            try { title.outlineWidth = 0.25f; title.outlineColor = new Color(0.20f, 0.08f, 0.30f); } catch {}
+            if (!_isHomeMode)
+                try { title.outlineWidth = 0.25f; title.outlineColor = new Color(0.20f, 0.08f, 0.30f); } catch {}
 
-            var close = NewGO("Close", bar.transform, typeof(Image), typeof(Button));
-            var xrt = close.GetComponent<RectTransform>();
-            xrt.anchorMin = new Vector2(1, 0.5f); xrt.anchorMax = new Vector2(1, 0.5f);
-            xrt.pivot = new Vector2(1, 0.5f);
-            xrt.anchoredPosition = new Vector2(-20, 0);
-            xrt.sizeDelta = new Vector2(78, 78);
-            close.GetComponent<Image>().color = new Color(0.82f, 0.26f, 0.26f, 1f);
-            var xl = MakeText(close.transform, "X", "X", 44, FontStyles.Bold, Color.white);
-            Stretch(xl.rectTransform); xl.alignment = TextAlignmentOptions.Center;
-            close.GetComponent<Button>().onClick.AddListener(Hide);
+            // Skip the close-X in home mode — HOME is permanent; the user
+            // navigates away via the BottomNavBar, not by closing this card.
+            if (!_isHomeMode)
+            {
+                var close = NewGO("Close", bar.transform, typeof(Image), typeof(Button));
+                var xrt = close.GetComponent<RectTransform>();
+                xrt.anchorMin = new Vector2(1, 0.5f); xrt.anchorMax = new Vector2(1, 0.5f);
+                xrt.pivot = new Vector2(1, 0.5f);
+                xrt.anchoredPosition = new Vector2(-20, 0);
+                xrt.sizeDelta = new Vector2(78, 78);
+                close.GetComponent<Image>().color = new Color(0.82f, 0.26f, 0.26f, 1f);
+                var xl = MakeText(close.transform, "X", "X", 44, FontStyles.Bold, Color.white);
+                Stretch(xl.rectTransform); xl.alignment = TextAlignmentOptions.Center;
+                close.GetComponent<Button>().onClick.AddListener(() => Hide());
+            }
         }
 
         private static void BuildStreakBanner(Transform card)
@@ -268,7 +359,13 @@ namespace Sparq.UI
             var scrollGO = NewGO("Scroll", card, typeof(Image), typeof(ScrollRect));
             var srRT = scrollGO.GetComponent<RectTransform>();
             srRT.anchorMin = new Vector2(0, 0); srRT.anchorMax = new Vector2(1, 1);
-            srRT.offsetMin = new Vector2(20, 140); srRT.offsetMax = new Vector2(-20, -300);
+            // Home mode skips streak banner (70px), tab strip (~90px), and
+            // bottom bar (~160px) — reclaim that space so the quest list
+            // fills the screen. The title bar (120px) is still there.
+            if (_isHomeMode)
+            { srRT.offsetMin = new Vector2(16, 20); srRT.offsetMax = new Vector2(-16, -130); }
+            else
+            { srRT.offsetMin = new Vector2(20, 140); srRT.offsetMax = new Vector2(-20, -300); }
             scrollGO.GetComponent<Image>().color = new Color(0, 0, 0, 0);
             var sr = scrollGO.GetComponent<ScrollRect>();
             sr.horizontal = false; sr.vertical = true; sr.scrollSensitivity = 30f;
@@ -354,13 +451,110 @@ namespace Sparq.UI
 
         private static void BuildDailyRows()
         {
+            // First-open + brand-new-tester fix: if no active quests have
+            // been rolled yet, ForceRefresh seeds today's set so the menu
+            // isn't "No quests yet — tap REFRESH" on first sight.
             var quests = QuestManager.Instance?.GetActiveQuests();
-            if (quests == null || quests.Count == 0)
+            if ((quests == null || quests.Count == 0) && QuestManager.Instance != null)
             {
-                BuildEmpty("No quests yet. Tap REFRESH to roll today's set.");
+                QuestManager.Instance.ForceRefresh();
+                quests = QuestManager.Instance.GetActiveQuests();
+            }
+
+            var activeIds = new System.Collections.Generic.HashSet<string>();
+            if (quests != null)
+                foreach (var q in quests)
+                    if (!string.IsNullOrEmpty(q.questId)) activeIds.Add(q.questId);
+            var pool = Sparq.Systems.QuestCatalog.DailyPool(includeSensitive: false);
+
+            // Home (light) mode renders section headers + interleaves the
+            // active interactive quests with their preview-only siblings.
+            // Modal (legacy) mode keeps the old "active first, preview after"
+            // layout without section dividers.
+            if (_isHomeMode)
+            {
+                // ── Start the day ───────────────────────────────────────────
+                BuildSectionHeader("Start the day");
+                int morningCount = 0;
+                if (quests != null)
+                    foreach (var q in quests)
+                        if (IsMorningCategory(LookupCategory(q))) { BuildQuestRow(q); morningCount++; }
+                foreach (var q in pool)
+                {
+                    if (activeIds.Contains(q.id)) continue;
+                    if (!IsMorningCategory(q.category)) continue;
+                    BuildInfoRow(q.id, QuestContent.GetShortLabel(q.id), q.xp, q.category, faded: true);
+                    morningCount++;
+                }
+                if (morningCount == 0) BuildEmpty("No morning quests available.");
+
+                // ── Any time ────────────────────────────────────────────────
+                BuildSectionHeader("Any time");
+                if (quests != null)
+                    foreach (var q in quests)
+                        if (!IsMorningCategory(LookupCategory(q))) BuildQuestRow(q);
+                foreach (var q in pool)
+                {
+                    if (activeIds.Contains(q.id)) continue;
+                    if (IsMorningCategory(q.category)) continue;
+                    BuildInfoRow(q.id, QuestContent.GetShortLabel(q.id), q.xp, q.category, faded: true);
+                }
                 return;
             }
-            foreach (var q in quests) BuildQuestRow(q);
+
+            // Legacy modal layout: active first, then the rest.
+            if (quests != null)
+                foreach (var q in quests) BuildQuestRow(q);
+            foreach (var q in pool)
+            {
+                if (activeIds.Contains(q.id)) continue;
+                BuildInfoRow(q.id,
+                             QuestContent.GetShortLabel(q.id),
+                             q.xp, q.category, faded: true);
+            }
+        }
+
+        // ── Section header (Finch-style) — used only in home mode ────────
+        private static void BuildSectionHeader(string label)
+        {
+            var row = NewGO("Section", _listParent, typeof(Image), typeof(LayoutElement));
+            row.GetComponent<LayoutElement>().preferredHeight = 76;
+            row.GetComponent<Image>().color = new Color(0, 0, 0, 0);
+            var t = MakeText(row.transform, "T", label, 28, FontStyles.Bold, L_SECTION);
+            var tRT = t.rectTransform;
+            tRT.anchorMin = new Vector2(0, 0); tRT.anchorMax = new Vector2(1, 1);
+            tRT.offsetMin = new Vector2(16, 0); tRT.offsetMax = new Vector2(-16, 0);
+            t.alignment = TextAlignmentOptions.MidlineLeft;
+        }
+
+        // Map a customTask back to a catalog Category so we can group it.
+        private static QuestCategory LookupCategory(Sparq.Core.CustomTask q)
+        {
+            if (q == null || string.IsNullOrEmpty(q.questId)) return QuestCategory.Floor;
+            var def = QuestCatalog.Get(q.questId);
+            return def != null ? def.category : QuestCategory.Floor;
+        }
+
+        // Categories that belong under "Start the day". Initiation (e.g.
+        // two_minute_start, open_curtains) and Sensory (sensory_reset,
+        // transition_buffer — useful for the morning-routine transition) fit
+        // here. Everything else lives in "Any time".
+        private static bool IsMorningCategory(QuestCategory cat)
+        {
+            return cat == QuestCategory.Initiation
+                || cat == QuestCategory.Sensory
+                || cat == QuestCategory.Sleep;
+        }
+
+        // "X goals left for today!" status text for the home-mode title bar.
+        private static string GetGoalsRemainingText()
+        {
+            var quests = QuestManager.Instance?.GetActiveQuests();
+            if (quests == null) return "Today's quests";
+            int left = 0;
+            foreach (var q in quests) if (q != null && !q.done) left++;
+            if (left == 0) return "All goals done — nice work!";
+            return left == 1 ? "1 goal left for today!" : $"{left} goals left for today!";
         }
 
         private static void BuildWeeklyRows()
@@ -466,21 +660,25 @@ namespace Sparq.UI
         private static GameObject MakeRow(Color bg)
         {
             var row = NewGO("Row", _listParent, typeof(Image), typeof(LayoutElement));
-            row.GetComponent<LayoutElement>().preferredHeight = 168;
-            row.GetComponent<Image>().color = bg;
+            // Light home cards are slimmer than the legacy stacked rows.
+            row.GetComponent<LayoutElement>().preferredHeight = _isHomeMode ? 140 : 168;
+            row.GetComponent<Image>().color = _isHomeMode ? L_CARD : bg;
             return row;
         }
 
         private static void BuildRowIcon(Transform row, string iconPath, Color tint)
         {
-            // Squircle backdrop behind icon
+            // Soft squircle backdrop behind icon. Light theme: pale grey square
+            // matching the reference; original theme: deep indigo.
             var pad = NewGO("IconPad", row, typeof(Image));
             var pRT = pad.GetComponent<RectTransform>();
             pRT.anchorMin = new Vector2(0, 0.5f); pRT.anchorMax = new Vector2(0, 0.5f);
             pRT.pivot = new Vector2(0, 0.5f);
-            pRT.anchoredPosition = new Vector2(16, 0);
-            pRT.sizeDelta = new Vector2(124, 124);
-            pad.GetComponent<Image>().color = new Color(0.18f, 0.16f, 0.34f, 0.85f);
+            pRT.anchoredPosition = new Vector2(20, 0);
+            pRT.sizeDelta = new Vector2(108, 108);
+            pad.GetComponent<Image>().color = _isHomeMode
+                ? L_ICON_PAD
+                : new Color(0.18f, 0.16f, 0.34f, 0.85f);
             pad.GetComponent<Image>().raycastTarget = false;
 
             var ico = NewGO("Icon", pad.transform, typeof(Image));
@@ -489,20 +687,36 @@ namespace Sparq.UI
             var iImg = ico.GetComponent<Image>();
             var sp = LoadSprite(iconPath);
             if (sp != null) { iImg.sprite = sp; iImg.preserveAspect = true; }
-            iImg.color = tint;
+            // In light theme we keep the icon's native color (full saturation),
+            // since the soft-grey pad is the only thing tinting visually.
+            iImg.color = _isHomeMode ? Color.white : tint;
             iImg.raycastTarget = false;
         }
 
         private static void BuildRowTitle(Transform row, string title, string subtitle = null)
         {
-            // Title — bumped 32 → 36 + outline so it pops against the purple card.
-            var t = MakeText(row, "Title", title, 36, FontStyles.Bold, CREAM);
-            try { t.outlineWidth = 0.18f; t.outlineColor = new Color(0, 0, 0, 0.7f); } catch {}
+            // Title — bold dark text in light theme (against the white card),
+            // bold cream + outline in legacy theme (against the indigo card).
+            var t = MakeText(row, "Title", title, 34, FontStyles.Bold,
+                             _isHomeMode ? L_TITLE_TEXT : CREAM);
+            if (!_isHomeMode)
+                try { t.outlineWidth = 0.18f; t.outlineColor = new Color(0, 0, 0, 0.7f); } catch {}
             var tRT = t.rectTransform;
-            tRT.anchorMin = new Vector2(0, 0.5f); tRT.anchorMax = new Vector2(1, 1);
-            tRT.pivot = new Vector2(0, 0.5f);
-            tRT.offsetMin = new Vector2(160, -10); tRT.offsetMax = new Vector2(-200, -14);
-            t.alignment = TextAlignmentOptions.BottomLeft;
+            if (_isHomeMode)
+            {
+                // Light theme: title is vertically centered (no fill bar below).
+                tRT.anchorMin = new Vector2(0, 0); tRT.anchorMax = new Vector2(1, 1);
+                tRT.pivot = new Vector2(0, 0.5f);
+                tRT.offsetMin = new Vector2(150, 0); tRT.offsetMax = new Vector2(-220, 0);
+                t.alignment = TextAlignmentOptions.MidlineLeft;
+            }
+            else
+            {
+                tRT.anchorMin = new Vector2(0, 0.5f); tRT.anchorMax = new Vector2(1, 1);
+                tRT.pivot = new Vector2(0, 0.5f);
+                tRT.offsetMin = new Vector2(160, -10); tRT.offsetMax = new Vector2(-200, -14);
+                t.alignment = TextAlignmentOptions.BottomLeft;
+            }
             t.textWrappingMode = TextWrappingModes.Normal;
 
             if (!string.IsNullOrEmpty(subtitle))
@@ -521,6 +735,10 @@ namespace Sparq.UI
 
         private static void BuildRowFill(Transform row, float ratio)
         {
+            // Light home theme has no fill bar — the row is a clean white
+            // card; progress is implied by the checkmark, not a gauge.
+            if (_isHomeMode) return;
+
             ratio = Mathf.Clamp01(ratio);
             var bgGO = NewGO("FillBg", row, typeof(Image));
             var brt = bgGO.GetComponent<RectTransform>();
@@ -541,6 +759,36 @@ namespace Sparq.UI
 
         private static void BuildRowXpChip(Transform row, int xp)
         {
+            if (_isHomeMode)
+            {
+                // Light theme: number + lightning-bolt sprite inline next to
+                // the checkmark. Replaces an earlier unicode "⚡" attempt that
+                // rendered as an empty square on the project's TMP font.
+                // Asset is the Layer Lab casual icon pack bolt; we tint amber.
+                const string BOLT = "Assets/Layer Lab/2D Icons-CasualIconPack/Icons/128/Icon_Resources_Lightning01_Blue.png";
+
+                var lbl = MakeText(row, "Xp", xp.ToString(),
+                    28, FontStyles.Bold, L_BODY_TEXT);
+                var lRT = lbl.rectTransform;
+                lRT.anchorMin = new Vector2(1, 0.5f); lRT.anchorMax = new Vector2(1, 0.5f);
+                lRT.pivot = new Vector2(1, 0.5f);
+                lRT.anchoredPosition = new Vector2(-180, 0);
+                lRT.sizeDelta = new Vector2(70, 50);
+                lbl.alignment = TextAlignmentOptions.MidlineRight;
+
+                var boltGO = NewGO("Bolt", row, typeof(Image));
+                var bRT = boltGO.GetComponent<RectTransform>();
+                bRT.anchorMin = new Vector2(1, 0.5f); bRT.anchorMax = new Vector2(1, 0.5f);
+                bRT.pivot = new Vector2(1, 0.5f);
+                bRT.anchoredPosition = new Vector2(-138, 0);
+                bRT.sizeDelta = new Vector2(36, 36);
+                var bImg = boltGO.GetComponent<Image>();
+                var sp = LoadSprite(BOLT);
+                if (sp != null) { bImg.sprite = sp; bImg.preserveAspect = true; }
+                bImg.color = L_BOLT;        // tint amber for the Finch look
+                bImg.raycastTarget = false;
+                return;
+            }
             var chip = NewGO("XpChip", row, typeof(Image));
             var crt = chip.GetComponent<RectTransform>();
             crt.anchorMin = new Vector2(1, 1); crt.anchorMax = new Vector2(1, 1);
@@ -550,25 +798,54 @@ namespace Sparq.UI
             chip.GetComponent<Image>().color = CHIP_BG;
             chip.GetComponent<Image>().raycastTarget = false;
 
-            var lbl = MakeText(chip.transform, "L", $"+{xp} XP", 28, FontStyles.Bold, INK);
-            Stretch(lbl.rectTransform); lbl.alignment = TextAlignmentOptions.Center;
+            var lblOld = MakeText(chip.transform, "L", $"+{xp} XP", 28, FontStyles.Bold, INK);
+            Stretch(lblOld.rectTransform); lblOld.alignment = TextAlignmentOptions.Center;
         }
 
         private static void BuildRowAction(Transform row, string label, Color color, System.Action onClick)
         {
-            var btn = NewGO("Action", row, typeof(Image), typeof(Button));
-            var brt = btn.GetComponent<RectTransform>();
-            brt.anchorMin = new Vector2(1, 0); brt.anchorMax = new Vector2(1, 0);
-            brt.pivot = new Vector2(1, 0);
-            brt.anchoredPosition = new Vector2(-18, 14);
-            brt.sizeDelta = new Vector2(160, 80);
-            var img = btn.GetComponent<Image>();
-            img.color = color; img.raycastTarget = true;
-            var b = btn.GetComponent<Button>();
-            b.targetGraphic = img; b.interactable = onClick != null;
-            var lbl = MakeText(btn.transform, "L", label, 32, FontStyles.Bold, INK);
-            Stretch(lbl.rectTransform); lbl.alignment = TextAlignmentOptions.Center;
-            if (onClick != null) b.onClick.AddListener(() => onClick.Invoke());
+            if (_isHomeMode)
+            {
+                // Light theme: a rounded soft-grey square containing a green
+                // ✓. Tapping completes the quest. Empty label / disabled is
+                // a faded ✓ — visual distinction comes from the icon, not a
+                // separate "Soon" word.
+                bool done   = label == "✓";
+                bool active = onClick != null && !done;
+
+                var btn = NewGO("Action", row, typeof(Image), typeof(Button));
+                var brt = btn.GetComponent<RectTransform>();
+                brt.anchorMin = new Vector2(1, 0.5f); brt.anchorMax = new Vector2(1, 0.5f);
+                brt.pivot = new Vector2(1, 0.5f);
+                brt.anchoredPosition = new Vector2(-20, 0);
+                brt.sizeDelta = new Vector2(96, 96);
+                var img = btn.GetComponent<Image>();
+                img.color = L_CHECK_BG; img.raycastTarget = true;
+                var b = btn.GetComponent<Button>();
+                b.targetGraphic = img; b.interactable = active;
+
+                var check = MakeText(btn.transform, "Chk", "✓", 56, FontStyles.Bold,
+                    done                 ? L_CHECK_GREEN
+                    : active             ? L_CHECK_GREEN
+                                         : new Color(0.78f, 0.80f, 0.84f, 1f));
+                Stretch(check.rectTransform);
+                check.alignment = TextAlignmentOptions.Center;
+                if (onClick != null) b.onClick.AddListener(() => onClick.Invoke());
+                return;
+            }
+            var btnL = NewGO("Action", row, typeof(Image), typeof(Button));
+            var brtL = btnL.GetComponent<RectTransform>();
+            brtL.anchorMin = new Vector2(1, 0); brtL.anchorMax = new Vector2(1, 0);
+            brtL.pivot = new Vector2(1, 0);
+            brtL.anchoredPosition = new Vector2(-18, 14);
+            brtL.sizeDelta = new Vector2(160, 80);
+            var imgL = btnL.GetComponent<Image>();
+            imgL.color = color; imgL.raycastTarget = true;
+            var bL = btnL.GetComponent<Button>();
+            bL.targetGraphic = imgL; bL.interactable = onClick != null;
+            var lblL = MakeText(btnL.transform, "L", label, 32, FontStyles.Bold, INK);
+            Stretch(lblL.rectTransform); lblL.alignment = TextAlignmentOptions.Center;
+            if (onClick != null) bL.onClick.AddListener(() => onClick.Invoke());
         }
 
         // ─────────────────────────────────────────────────────────────────

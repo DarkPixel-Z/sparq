@@ -16,7 +16,7 @@ namespace Sparq.UI
     ///   - Layer Lab GUI Pro-SuperCasual joystick sprites
     ///   - Layer Lab 2D Icons-RewardChestPack for chests
     ///   - Layer Lab 2D Icons-CasualIconPack for top/bottom HUD icons
-    ///   - FantasyMaps painted scenes for terrain
+    ///   - Fantasy World 2D tile carpet for terrain (TileTerrain)
     ///   - Existing chibi packs for hero / pet / ally / enemies
     ///
     /// Show via: Sparq.UI.WorldExplorePanel.Show("forest");
@@ -40,12 +40,12 @@ namespace Sparq.UI
         // ── Movement ──
         // Tightened to a deliberate explore pace. No input smoothing — when the
         // stick releases, the player stops immediately (no glide/drift).
-        private const float PLAYER_MAX_SPEED = 150f;          // px/sec at full joystick deflection (was 200 — tester felt too fast)
-        private const float ALLY_FOLLOW_SPEED = 260f;         // slightly faster so the pet catches up
+        private const float PLAYER_MAX_SPEED = 180f;          // px/sec at full joystick deflection (200=fast, 150=slow, 180=balanced)
+        private const float ALLY_FOLLOW_SPEED = 290f;         // bumped with player speed so the pet still catches up
         private const float ARRIVAL_THRESHOLD = 8f;
         private const float ENEMY_AGGRO_RADIUS = 130f;        // walk this close = battle starts
         private const float JOYSTICK_DEADZONE = 0.25f;        // larger deadzone = fewer accidental drifts
-        private const float INPUT_RESPONSE_POW = 2.0f;        // higher power = harder to go fast (more deliberate)
+        private const float INPUT_RESPONSE_POW = 1.6f;        // less steep than 2.0 — full-stick reaches max sooner without losing the gentle-tap floor
 
         // Playable area is smaller than the map sprite — keeps the squad on the
         // green island and out of the painted water/sky borders.
@@ -160,8 +160,7 @@ namespace Sparq.UI
         {
             public string id;
             public string name;             // shown in the HUD + banners
-            public string bgSet;             // FantasyMaps set: "01" or "02"
-            public Color  tint;              // applied to the painted backdrop for variety
+            public Color  tint;              // applied to the tile carpet for variety
             public string biomeKey;          // drives SquadBattle backdrop + ambient
             public float  difficulty;        // enemy HP/ATK multiplier
             public float  lootMult;          // coin/gem/chest value multiplier
@@ -178,14 +177,14 @@ namespace Sparq.UI
             // softened (top zone 5.2→3.9) so deep zones don't wall — enemies also
             // scale with player level on top of this, so the curve compounds.
             // signatureItemId pairs each zone with its guaranteed first-clear drop.
-            new WorldZone { id="greenwood", name="Greenwood Vale", bgSet="01", tint=new Color(1.00f,1.00f,1.00f), biomeKey="forest",  difficulty=1.0f,  lootMult=1.0f,  signatureItemId="sig_greenwood"  },
-            new WorldZone { id="mossfen",   name="Mossfen Marsh",  bgSet="01", tint=new Color(0.74f,0.88f,0.70f), biomeKey="forest",  difficulty=1.25f, lootMult=1.25f, signatureItemId="sig_mossfen"    },
-            new WorldZone { id="shadowmoor",name="Shadowmoor",     bgSet="02", tint=new Color(0.72f,0.62f,0.92f), biomeKey="haunted", difficulty=1.55f, lootMult=1.55f, signatureItemId="sig_shadowmoor" },
-            new WorldZone { id="emberpeak", name="Emberpeak",      bgSet="02", tint=new Color(1.00f,0.70f,0.48f), biomeKey="rocky",   difficulty=1.9f,  lootMult=1.9f,  signatureItemId="sig_emberpeak"  },
-            new WorldZone { id="frostspire",name="Frostspire",     bgSet="01", tint=new Color(0.70f,0.85f,1.00f), biomeKey="moonlit", difficulty=2.3f,  lootMult=2.3f,  signatureItemId="sig_frostspire" },
-            new WorldZone { id="duskwastes",name="Dusk Wastes",    bgSet="02", tint=new Color(0.86f,0.76f,0.60f), biomeKey="rocky",   difficulty=2.75f, lootMult=2.8f,  signatureItemId="sig_duskwastes" },
-            new WorldZone { id="voidreach", name="Voidreach",      bgSet="02", tint=new Color(0.62f,0.55f,0.85f), biomeKey="haunted", difficulty=3.3f,  lootMult=3.4f,  signatureItemId="sig_voidreach"  },
-            new WorldZone { id="dragonspire",name="Dragonspire",   bgSet="02", tint=new Color(1.00f,0.55f,0.42f), biomeKey="rocky",   difficulty=3.9f,  lootMult=4.0f,  signatureItemId="sig_dragonspire"},
+            new WorldZone { id="greenwood", name="Greenwood Vale", tint=new Color(1.00f,1.00f,1.00f), biomeKey="forest",  difficulty=1.0f,  lootMult=1.0f,  signatureItemId="sig_greenwood"  },
+            new WorldZone { id="mossfen",   name="Mossfen Marsh",  tint=new Color(0.74f,0.88f,0.70f), biomeKey="forest",  difficulty=1.25f, lootMult=1.25f, signatureItemId="sig_mossfen"    },
+            new WorldZone { id="shadowmoor",name="Shadowmoor",     tint=new Color(0.72f,0.62f,0.92f), biomeKey="haunted", difficulty=1.55f, lootMult=1.55f, signatureItemId="sig_shadowmoor" },
+            new WorldZone { id="emberpeak", name="Emberpeak",      tint=new Color(1.00f,0.70f,0.48f), biomeKey="rocky",   difficulty=1.9f,  lootMult=1.9f,  signatureItemId="sig_emberpeak"  },
+            new WorldZone { id="frostspire",name="Frostspire",     tint=new Color(0.70f,0.85f,1.00f), biomeKey="moonlit", difficulty=2.3f,  lootMult=2.3f,  signatureItemId="sig_frostspire" },
+            new WorldZone { id="duskwastes",name="Dusk Wastes",    tint=new Color(0.86f,0.76f,0.60f), biomeKey="rocky",   difficulty=2.75f, lootMult=2.8f,  signatureItemId="sig_duskwastes" },
+            new WorldZone { id="voidreach", name="Voidreach",      tint=new Color(0.62f,0.55f,0.85f), biomeKey="haunted", difficulty=3.3f,  lootMult=3.4f,  signatureItemId="sig_voidreach"  },
+            new WorldZone { id="dragonspire",name="Dragonspire",   tint=new Color(1.00f,0.55f,0.42f), biomeKey="rocky",   difficulty=3.9f,  lootMult=4.0f,  signatureItemId="sig_dragonspire"},
         };
 
         private static int _zoneIndex;
@@ -295,7 +294,7 @@ namespace Sparq.UI
             _zoneLabel = null;
             _levelLabel = null; _xpLabel = null;
             _vitalityLabel = null;
-            _bgSky = null; _bgGround = null; _bgDeco = null;
+            _tileGround = null; _tilePath = null;
             _joystickBg = null; _joystickHandle = null;
             try { Sparq.UI.MapBgm.Stop(); } catch {}
             try { Sparq.UI.HomeBgm.Resume(); } catch {}
@@ -339,7 +338,11 @@ namespace Sparq.UI
             _viewport.offsetMin = Vector2.zero; _viewport.offsetMax = Vector2.zero;
         }
 
-        private static Image _bgSky, _bgGround, _bgDeco;
+        // Tilemap-based backdrop. Replaced the FantasyMaps painted layers
+        // (sky/ground/decorations) — those had irregular cliffs short of the
+        // playable rect so testers walked into invisible nothing reaching for
+        // loot. With a tile carpet the entire MAP_W × MAP_H rect is ground.
+        private static GameObject _tileGround, _tilePath;
 
         private static void BuildMapContent(string mapId)
         {
@@ -351,49 +354,20 @@ namespace Sparq.UI
             _mapContent.pivot = new Vector2(0.5f, 0.5f);
             _mapContent.sizeDelta = new Vector2(MAP_W, MAP_H);
 
-            _bgSky    = AddBgLayer("Sky", 0);
-            _bgGround = AddBgLayer("Ground", 1);
-            _bgDeco   = AddBgLayer("Deco", 2);
             RefreshZoneBackdrop();
         }
 
-        private static Image AddBgLayer(string name, int sibling)
-        {
-            var go = new GameObject($"BG_{name}", typeof(RectTransform), typeof(Image));
-            go.transform.SetParent(_mapContent, false);
-            go.transform.SetSiblingIndex(sibling);
-            var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
-            var img = go.GetComponent<Image>();
-            img.preserveAspect = false;
-            img.raycastTarget = false;
-            return img;
-        }
-
-        // Swap the 3 painted layers to the current zone's set + apply its tint so
-        // each zone reads as a distinct place.
+        // (Re)build the tile carpet + path overlay for the current zone. Cheap
+        // enough to recreate from scratch on zone advance — ~110 Image GameObjects.
         private static void RefreshZoneBackdrop()
         {
-            // Runs in both Editor + Player builds — SpriteLoader handles the
-            // Resources-vs-AssetDatabase fork. Earlier this whole method was
-            // editor-only (#if UNITY_EDITOR) so APK world maps rendered blank
-            // with just placeholder ellipses for stage nodes.
             var z = CurrentZone();
-            void Apply(Image img, string layerFile)
-            {
-                if (img == null) return;
-                string path = $"Assets/FantasyMaps/_PNG/{z.bgSet}/layers/{layerFile}";
-#if UNITY_EDITOR
-                EnsureSpriteImporter(path);   // editor-only — adjusts import settings on first load
-#endif
-                var sp = Sparq.Core.SpriteLoader.Load(path);
-                if (sp != null) img.sprite = sp;
-                img.color = z.tint;
-            }
-            Apply(_bgSky,    "l1-sky.png");
-            Apply(_bgGround, "l2-ground.png");
-            Apply(_bgDeco,   "l3-decoartions.png");
+            if (_tilePath   != null) { Object.Destroy(_tilePath);   _tilePath   = null; }
+            if (_tileGround != null) { Object.Destroy(_tileGround); _tileGround = null; }
+            int seed = (z.id != null ? z.id.GetHashCode() : 0);
+            _tileGround = Sparq.UI.TileTerrain.BuildGround(_mapContent, MAP_W, MAP_H,
+                                                           z.biomeKey, z.tint, seed);
+            _tilePath   = Sparq.UI.TileTerrain.BuildPath  (_mapContent, MAP_W, MAP_H, seed);
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -404,8 +378,11 @@ namespace Sparq.UI
         // so the same map always looks the same between sessions.
         private static void BuildVegetation(string mapId)
         {
-            #if UNITY_EDITOR
-            // Different seeds per biome so each map feels distinct
+            // Runs in both Editor + Player builds. The whole body was once
+            // wrapped in #if UNITY_EDITOR which made APK explore maps look
+            // bare — no trees, shrubs, or stones, just the painted backdrop.
+            // SpriteLoader handles the Resources fork; the Fantasy World 2D
+            // vegetation PNGs were migrated to Resources for runtime load.
             int seed = mapId == null ? 0 : mapId.GetHashCode();
             var rng = new System.Random(seed);
 
@@ -454,7 +431,6 @@ namespace Sparq.UI
                     $"{FW}stones/cartoon_world_stone_{stoneOptions[v]}.png",
                     new Vector2(x, y), Random.Range(70f, 110f));
             }
-            #endif
         }
 
         private static void SpawnVegSprite(string name, string path, Vector2 pos, float size)
@@ -466,9 +442,10 @@ namespace Sparq.UI
             if (sp == null) return;
             var go = new GameObject(name, typeof(RectTransform), typeof(Image));
             go.transform.SetParent(_mapContent, false);
-            // Sit just above the BG layers but below squad/enemies/chests so the
-            // squad always renders in front of grass — set sibling early.
-            go.transform.SetSiblingIndex(3);   // BG_Sky=0, BG_Ground=1, BG_Deco=2, veg starts at 3
+            // Sit just above the TileGround + TilePath carpets but below the
+            // squad/enemies/chests so the squad always renders in front of
+            // grass. Tile carriers grab siblings 0 + 1, vegetation starts at 2.
+            go.transform.SetSiblingIndex(2);
             var rt = go.GetComponent<RectTransform>();
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0f);     // pivot at base so things sit on the ground

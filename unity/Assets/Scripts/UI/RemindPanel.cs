@@ -779,6 +779,24 @@ namespace Sparq.UI
             {
                 string title = inputField.text?.Trim();
                 if (string.IsNullOrEmpty(title)) title = "Reminder";
+
+                // Reminders are PRIVATE to the user but we still surface
+                // help panels if a self-harm or threat signal slips through
+                // (someone writing "hurt myself" as a reminder is a reach-out;
+                // someone writing a school-violence plan in a reminder is a
+                // real signal). Don't BLOCK the save — the reminder is the
+                // user's own data and may be the audit trail later.
+                if (!string.IsNullOrEmpty(title))
+                {
+                    var verdict = Sparq.Safety.ContentModerator.Inspect(title, "reminder");
+                    if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
+                        && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
+                    { try { Sparq.UI.CrisisResourcesPanel.Show(); } catch {} }
+                    if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.ThreatViolence)
+                        && !Sparq.UI.ThreatResponsePanel.RecentlyDismissed())
+                    { try { Sparq.UI.ThreatResponsePanel.Show(); } catch {} }
+                }
+
                 Sparq.Systems.RemindService.Add(title, hour[0], minute[0], new string(dayBits));
                 UnityEngine.Object.Destroy(cv);
             });

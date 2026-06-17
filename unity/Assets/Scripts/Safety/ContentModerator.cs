@@ -47,6 +47,7 @@ namespace Sparq.Safety
             PhishingURL, ScamLure, CredentialRequest, Impersonation,
             Harassment, SelfHarmDirective,
             SelfHarmIdeation,      // USER expressing self-harm thoughts → triage, don't punish
+            ThreatViolence,        // USER threatening someone else / mass-harm / weapons → block + flag
             SlangPattern, EvasiveSpelling, SuggestiveEmoji,
             OffPlatformLure,        // "add me on snap" — predator red flag
             SexualSlang,            // "dtf", "smash", "thicc", "rizz" (sexual)
@@ -396,6 +397,66 @@ namespace Sparq.Safety
         };
 
         // ─────────────────────────────────────────────────────────────────
+        // THREATS OF VIOLENCE — user threatening someone ELSE.
+        // ─────────────────────────────────────────────────────────────────
+        // Distinct from SelfHarmIdeation (self-directed → supportive response)
+        // and Harassment (directives like "kys" → block + warn). This catches
+        // mass-harm patterns + weapon-laden direct threats: "shoot up the
+        // school", "I have a gun", "going to kill her".
+        //
+        // Design notes:
+        //   - Patterns require BOTH a verb-of-harm AND a target / weapon —
+        //     "kill" alone isn't a threat ("kill it on stage"); "kill him"
+        //     is. Weapon nouns alone ("I have a gun") DO trigger because
+        //     they're rarely benign in a teen chat context.
+        //   - First-person self-harm is exempted: "going to kill myself"
+        //     would also match "going to kill" but SelfHarmIdeationPhrases
+        //     catches it first; the order of checks in Inspect() matters.
+        //   - Targets explicitly include schools — the highest-risk public
+        //     threat pattern for the teen audience.
+        //   - When this fires, the message is BLOCKED (never reaches chat),
+        //     flagged to ModerationQueue, and a ThreatResponsePanel surfaces
+        //     a firm-but-supportive message with 988 + 911 guidance.
+        private static readonly string[] ThreatViolencePhrases = new[]
+        {
+            // Shooting threats
+            "going to shoot", "gonna shoot", "i'll shoot", "i will shoot",
+            "shoot up the school", "shoot up my school", "shoot up the class",
+            "shoot up a school", "school shooter", "school shooting",
+            // Stabbing / cutting threats (directed)
+            "going to stab", "gonna stab", "i'll stab", "i will stab",
+            // Kill threats (target-directed — myself excluded via SelfHarm catch first)
+            "going to kill you", "gonna kill you",
+            "going to kill him", "gonna kill him",
+            "going to kill her", "gonna kill her",
+            "going to kill them", "gonna kill them",
+            "going to kill everyone", "gonna kill everyone",
+            "i'll kill you", "i will kill you",
+            "i'll kill him", "i will kill him",
+            "i'll kill her", "i will kill her",
+            "i'll kill them", "i will kill them",
+            // Hurt threats (directed)
+            "going to hurt you", "gonna hurt you",
+            "going to hurt him", "gonna hurt him",
+            "going to hurt her", "gonna hurt her",
+            "going to hurt them", "gonna hurt them",
+            "i'll hurt you", "i will hurt you",
+            // Bombs / explosives
+            "going to blow up", "gonna blow up",
+            "blow up the school", "blow up my school", "blow up the building",
+            "make a bomb", "making a bomb", "build a bomb", "plant a bomb",
+            "i have a bomb", "ive got a bomb", "i've got a bomb", "got a bomb",
+            // Arson
+            "burn down the school", "burn down my school", "burn it all down",
+            // Weapon possession claims (high-signal in a teen chat context)
+            "i have a gun", "ive got a gun", "i've got a gun", "i got a gun",
+            "bring a gun to school", "bringing a gun to school",
+            "bring a gun", "bringing a gun",
+            "i have a knife", "ive got a knife", "i've got a knife",
+            "bring a knife to school", "bringing a knife to school",
+        };
+
+        // ─────────────────────────────────────────────────────────────────
         // PUBLIC API
         // ─────────────────────────────────────────────────────────────────
 
@@ -524,6 +585,27 @@ namespace Sparq.Safety
                 }
             }
 
+            // ── L5c: THREAT OF VIOLENCE (user threatening someone else) ──
+            // Distinct from SelfHarmIdeation: this fires the firm
+            // ThreatResponsePanel rather than the supportive
+            // CrisisResourcesPanel, blocks the message, and flags
+            // ModerationQueue. The SelfHarmIdeation check above runs first
+            // on purpose — "going to kill myself" is a self-harm reach-out,
+            // not a threat. If that already flagged the message we skip the
+            // threat check to avoid double-labeling.
+            if (!v.Reasons.Contains(Category.SelfHarmIdeation))
+            {
+                foreach (var p in ThreatViolencePhrases)
+                {
+                    if (lower.Contains(p) || lowerNorm.Contains(p))
+                    {
+                        if (!v.Reasons.Contains(Category.ThreatViolence))
+                            v.Reasons.Add(Category.ThreatViolence);
+                        break;
+                    }
+                }
+            }
+
             // ── L6: Context classifier — multi-signal scoring ──
             // Catches subtle predators who avoid keywords but use the
             // grooming pattern combinations (intimacy + secrecy + demands).
@@ -620,6 +702,7 @@ namespace Sparq.Safety
                     case Category.SexualSlang:        // dtf, smash, thicc, rizz, onlyfans
                     case Category.DrugSlang:          // 420, plug, molly, lean
                     case Category.PredatorEndearment: // babygirl, princess, daddy in stranger chat
+                    case Category.ThreatViolence:     // weapons / mass-harm / "i'll kill you"
                         return Severity.Block;
                 }
             }
@@ -658,6 +741,7 @@ namespace Sparq.Safety
                     case Category.Impersonation:    return "Real Sparq staff have a verified badge. Block + report.";
                     case Category.Harassment:       return "Be kind. Bullying isn't allowed in Sparq.";
                     case Category.SelfHarmDirective:return "Stop. Reporting this message. If you need help, please reach out to a trusted adult.";
+                    case Category.ThreatViolence:   return "";  // ThreatResponsePanel speaks for itself — caller surfaces it.
                     case Category.OffPlatformLure:  return "Conversations stay on Sparq. Moving to other apps isn't safe.";
                     case Category.SuggestiveEmoji:  return "That combination of emoji isn't appropriate here.";
                     case Category.SlangPattern:     return "Watch the shorthand — message reviewed.";

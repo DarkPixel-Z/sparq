@@ -75,6 +75,12 @@ namespace Sparq.UI
             EnsureEventSystem();
             _openDm = null;
 
+            // TESTER MODE: clear any persisted mute / strike history so a
+            // tester who triggered the safety pipeline earlier (intentionally
+            // or by accident) can still send chat messages. Remove this once
+            // the closed test wraps.
+            try { Sparq.Safety.RateLimiter.ClearAllRestrictions(); } catch {}
+
             // Overlay canvas
             _root = new GameObject("Sparq_ChatPanel",
                 typeof(RectTransform), typeof(Canvas),
@@ -100,13 +106,18 @@ namespace Sparq.UI
             dim.GetComponent<Image>().color = new Color(0, 0, 0, 0.78f);
             dim.GetComponent<Button>().onClick.AddListener(Hide);
 
-            // Card — Layer Lab popup frame, tinted dark navy
+            // Card — Layer Lab popup frame, tinted dark navy. Stretches to
+            // fill the screen with fixed margins so the input bar at the
+            // bottom always stays on screen. Previously the card had a
+            // fixed 1620px height which fell off the bottom on 20:9 phones,
+            // hiding the input field — testers reported "can't enter to
+            // submit text" because the field was offscreen.
             var card = NewGO("Card", _root.transform, typeof(Image));
             var crt = card.GetComponent<RectTransform>();
-            crt.anchorMin = new Vector2(0.5f, 0.5f); crt.anchorMax = new Vector2(0.5f, 0.5f);
+            crt.anchorMin = new Vector2(0, 0); crt.anchorMax = new Vector2(1, 1);
             crt.pivot = new Vector2(0.5f, 0.5f);
-            crt.anchoredPosition = Vector2.zero;
-            crt.sizeDelta = new Vector2(980, 1620);
+            crt.offsetMin = new Vector2(50, 150);    // 150px clearance for the bottom nav
+            crt.offsetMax = new Vector2(-50, -150);  // 150px clearance for the status bar
             var cardImg = card.GetComponent<Image>();
             var bgSp = LoadSprite(POPUP_BG);
             if (bgSp != null) { cardImg.sprite = bgSp; cardImg.type = Image.Type.Sliced; }
@@ -123,13 +134,19 @@ namespace Sparq.UI
 
             BuildTitleBar(card.transform);
             BuildTabRow(card.transform);
+            BuildAITranslateBar(card.transform);
 
-            // Content frame — between tab row and input bar
+            // Content frame — between tab row and input bar. Inset 60px from
+            // the card's left/right so the Layer Lab popup border (which eats
+            // ~50px of the card width on each side) doesn't clip chat row
+            // avatars. Bigger top reservation (-290) leaves room for the
+            // title bar + tab strip; bigger bottom reservation (150) leaves
+            // room for the input bar.
             var cf = NewGO("ContentFrame", card.transform);
             var cfRT = cf.GetComponent<RectTransform>();
             cfRT.anchorMin = new Vector2(0, 0); cfRT.anchorMax = new Vector2(1, 1);
-            cfRT.offsetMin = new Vector2(28, 150);     // leave room for input bar
-            cfRT.offsetMax = new Vector2(-28, -290);   // below title + tabs
+            cfRT.offsetMin = new Vector2(60, 150);
+            cfRT.offsetMax = new Vector2(-60, -340);   // +50 to clear the AITranslateBar
             _contentFrame = cf.transform;
 
             BuildInputBar(card.transform);
@@ -175,6 +192,56 @@ namespace Sparq.UI
             var xl = MakeText(close.transform, "X", "X", 44, FontStyles.Bold, Color.white);
             Stretch(xl.rectTransform); xl.alignment = TextAlignmentOptions.Center;
             close.GetComponent<Button>().onClick.AddListener(Hide);
+        }
+
+        // AI Auto-Translate is per-session, on by default so testers see the
+        // feature exists. Persisted via PlayerPrefs so the toggle sticks
+        // across panel opens.
+        private static bool _aiTranslateOn = true;
+        private const string KEY_AI_TRANSLATE = "sparq.chat.ai_translate_on";
+
+        private static Image _aiBarImg;
+        private static TMP_Text _aiBarLbl;
+
+        private static void BuildAITranslateBar(Transform card)
+        {
+            // Loaded toggle state.
+            _aiTranslateOn = PlayerPrefs.GetInt(KEY_AI_TRANSLATE, 1) == 1;
+
+            var bar = NewGO("AITranslateBar", card, typeof(Image), typeof(Button));
+            var rt = bar.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1);
+            rt.pivot = new Vector2(0.5f, 1);
+            rt.anchoredPosition = new Vector2(0, -262);   // below the tab row
+            rt.sizeDelta = new Vector2(-120, 56);
+            _aiBarImg = bar.GetComponent<Image>();
+
+            _aiBarLbl = MakeText(bar.transform, "Lbl", "", 26, FontStyles.Bold,
+                new Color(1f, 0.97f, 0.85f));
+            Stretch(_aiBarLbl.rectTransform);
+            _aiBarLbl.alignment = TextAlignmentOptions.Center;
+
+            RefreshAIBar();
+
+            bar.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                _aiTranslateOn = !_aiTranslateOn;
+                PlayerPrefs.SetInt(KEY_AI_TRANSLATE, _aiTranslateOn ? 1 : 0);
+                PlayerPrefs.Save();
+                RefreshAIBar();
+                Debug.Log($"[ChatPanel] AI Auto-Translate → {(_aiTranslateOn ? "ON" : "OFF")}");
+            });
+        }
+
+        private static void RefreshAIBar()
+        {
+            if (_aiBarImg == null || _aiBarLbl == null) return;
+            _aiBarImg.color = _aiTranslateOn
+                ? new Color(0.30f, 0.65f, 0.42f, 1f)   // green = on
+                : new Color(0.32f, 0.30f, 0.40f, 1f);  // slate = off
+            _aiBarLbl.text = _aiTranslateOn
+                ? "AI Auto-Translate:  ON"
+                : "AI Auto-Translate:  OFF  (tap to enable)";
         }
 
         private static void BuildTabRow(Transform card)
@@ -248,6 +315,13 @@ namespace Sparq.UI
             var (scroll, listContent) = BuildScrollList(_contentFrame, topInset: 52f);
             _activeScroll = scroll; _activeList = listContent;
 
+            // Same "+ Start a new chat" entry point that lives at the top
+            // of the Individual tab — placed on World and Guild too so the
+            // action is discoverable regardless of which channel you opened.
+            // Behavior is identical (spawns a stub DM convo and opens it),
+            // since "new chat" is always a private DM, not a new public
+            // channel.
+            AddNewChatRow(listContent);
             foreach (var m in log) AddBubble(listContent, m);
             Canvas.ForceUpdateCanvases();
             scroll.verticalNormalizedPosition = 0f;
@@ -275,9 +349,79 @@ namespace Sparq.UI
             var (scroll, listContent) = BuildScrollList(_contentFrame, topInset: 0f);
             _activeScroll = scroll; _activeList = listContent;
 
+            // "+ Start a new chat" row at the top of the inbox. For the
+            // closed-test round it spawns a stub conversation tagged "New
+            // Friend" so testers can see the action does something visible;
+            // wire to a real Friends picker in the next iteration.
+            AddNewChatRow(listContent);
             foreach (var c in _dms) AddInboxRow(listContent, c);
 
             ShowInputBar(false, backToInbox: false);   // no input on the inbox list itself
+        }
+
+        // Deterministic-but-varied avatar tint per username. Hash the name
+        // into a hue so the same person always renders the same color, but
+        // a brand-new name gets something distinct from existing convos.
+        private static Color ColorFromName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return new Color(0.60f, 0.78f, 1f);
+            int h = 0;
+            foreach (var c in name) h = (h * 31 + c) & 0xFFFFFF;
+            float hue = (h % 360) / 360f;
+            return Color.HSVToRGB(hue, 0.55f, 0.95f);
+        }
+
+        // Top-of-inbox "+ Start a new chat" row. Tap → opens NewChatPicker.
+        // Visually distinct from the inbox rows (gold accent + "+" glyph) so
+        // it reads as an action, not another DM.
+        private static void AddNewChatRow(Transform parent)
+        {
+            var row = NewGO("NewChat", parent, typeof(Image), typeof(Button), typeof(LayoutElement));
+            row.GetComponent<LayoutElement>().preferredHeight = 110;
+            row.GetComponent<Image>().color = new Color(0.96f, 0.66f, 0.10f, 1f);   // gold
+
+            // "+" glyph on the left where the avatar would be.
+            var plus = MakeText(row.transform, "Plus", "+", 60, FontStyles.Bold,
+                new Color(0.13f, 0.10f, 0.20f, 1f));
+            var pRT = plus.rectTransform;
+            pRT.anchorMin = new Vector2(0, 0.5f); pRT.anchorMax = new Vector2(0, 0.5f);
+            pRT.pivot = new Vector2(0.5f, 0.5f);
+            pRT.anchoredPosition = new Vector2(80, 0);
+            pRT.sizeDelta = new Vector2(80, 80);
+            plus.alignment = TextAlignmentOptions.Center;
+
+            // Label
+            var lbl = MakeText(row.transform, "Lbl", "Start a new chat",
+                30, FontStyles.Bold, new Color(0.13f, 0.10f, 0.20f, 1f));
+            var lRT = lbl.rectTransform;
+            lRT.anchorMin = new Vector2(0, 0); lRT.anchorMax = new Vector2(1, 1);
+            lRT.pivot = new Vector2(0, 0.5f);
+            lRT.offsetMin = new Vector2(140, 0); lRT.offsetMax = new Vector2(-20, 0);
+            lbl.alignment = TextAlignmentOptions.MidlineLeft;
+
+            row.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                // Open the username picker. When the tester confirms a name,
+                // reuse-or-create the matching Convo and open its thread. No
+                // friends-list backend yet (PlayerData has none), so any
+                // typed username works; ContentModerator gates PII / slurs.
+                Sparq.UI.NewChatPicker.Show(picked =>
+                {
+                    if (string.IsNullOrWhiteSpace(picked)) return;
+                    var existing = _dms.Find(d => string.Equals(d.name, picked,
+                        System.StringComparison.OrdinalIgnoreCase));
+                    if (existing != null) { OpenDmThread(existing); return; }
+                    var convo = new Convo {
+                        name = picked,
+                        lastMsg = "(no messages yet)",
+                        unread = 0,
+                        tint = ColorFromName(picked),
+                        thread = new List<Msg>(),
+                    };
+                    _dms.Insert(0, convo);
+                    OpenDmThread(convo);
+                });
+            });
         }
 
         private static void AddInboxRow(Transform parent, Convo c)
@@ -286,12 +430,13 @@ namespace Sparq.UI
             row.GetComponent<LayoutElement>().preferredHeight = 132;
             row.GetComponent<Image>().color = ROW_BG;
 
-            // Avatar circle
+            // Avatar circle. Bumped to 64px so the diamond inner edge of the
+            // Layer Lab popup border doesn't clip even rows near the card edge.
             var av = NewGO("Avatar", row.transform, typeof(Image));
             var avRT = av.GetComponent<RectTransform>();
             avRT.anchorMin = new Vector2(0, 0.5f); avRT.anchorMax = new Vector2(0, 0.5f);
             avRT.pivot = new Vector2(0, 0.5f);
-            avRT.anchoredPosition = new Vector2(20, 0);
+            avRT.anchoredPosition = new Vector2(64, 0);
             avRT.sizeDelta = new Vector2(92, 92);
             var avImg = av.GetComponent<Image>();
             var circ = LoadSprite(CIRCLE_BG);
@@ -302,13 +447,13 @@ namespace Sparq.UI
                 42, FontStyles.Bold, Color.white);
             Stretch(initial.rectTransform); initial.alignment = TextAlignmentOptions.Center;
 
-            // Name + last message
+            // Name + last message — left offset bumped to match avatar shift.
             var nm = MakeText(row.transform, "Name", c.name, 32, FontStyles.Bold, CREAM);
             var nmRT = nm.rectTransform;
             nmRT.anchorMin = new Vector2(0, 1); nmRT.anchorMax = new Vector2(1, 1);
             nmRT.pivot = new Vector2(0, 1);
-            nmRT.anchoredPosition = new Vector2(132, -16);
-            nmRT.sizeDelta = new Vector2(-280, 44);
+            nmRT.anchoredPosition = new Vector2(176, -16);
+            nmRT.sizeDelta = new Vector2(-310, 44);
             nm.alignment = TextAlignmentOptions.MidlineLeft;
 
             var last = MakeText(row.transform, "Last", c.lastMsg, 25, FontStyles.Normal,
@@ -316,8 +461,8 @@ namespace Sparq.UI
             var lastRT = last.rectTransform;
             lastRT.anchorMin = new Vector2(0, 0); lastRT.anchorMax = new Vector2(1, 0);
             lastRT.pivot = new Vector2(0, 0);
-            lastRT.anchoredPosition = new Vector2(132, 18);
-            lastRT.sizeDelta = new Vector2(-280, 44);
+            lastRT.anchoredPosition = new Vector2(176, 18);
+            lastRT.sizeDelta = new Vector2(-310, 44);
             last.alignment = TextAlignmentOptions.MidlineLeft;
             last.textWrappingMode = TextWrappingModes.NoWrap;
             last.overflowMode = TextOverflowModes.Ellipsis;
@@ -400,14 +545,18 @@ namespace Sparq.UI
             int lines = Mathf.Max(1, Mathf.CeilToInt(m.text.Length / 34f));
             le.preferredHeight = 70 + lines * 34;
 
-            // Avatar (incoming only)
+            // Avatar (incoming only). The Layer Lab popup border sprite has
+            // a DIAMOND inner edge (curves in at top and bottom), so a
+            // fixed content-frame inset doesn't clear the border at all
+            // y positions. Bumping the avatar offset to 64px so even rows
+            // near the top/bottom of the card stay inside the diamond.
             if (!m.fromMe)
             {
                 var av = NewGO("Av", row.transform, typeof(Image));
                 var avRT = av.GetComponent<RectTransform>();
                 avRT.anchorMin = new Vector2(0, 1); avRT.anchorMax = new Vector2(0, 1);
                 avRT.pivot = new Vector2(0, 1);
-                avRT.anchoredPosition = new Vector2(4, -8);
+                avRT.anchoredPosition = new Vector2(64, -8);
                 avRT.sizeDelta = new Vector2(64, 64);
                 var circ = LoadSprite(CIRCLE_BG);
                 if (circ != null) av.GetComponent<Image>().sprite = circ;
@@ -419,7 +568,7 @@ namespace Sparq.UI
                 Stretch(ini.rectTransform); ini.alignment = TextAlignmentOptions.Center;
             }
 
-            // Name + time (incoming only)
+            // Name + time (incoming only) — shifted right to match avatar.
             float bubbleTop = -6;
             if (!m.fromMe)
             {
@@ -428,8 +577,8 @@ namespace Sparq.UI
                 var ntRT = nt.rectTransform;
                 ntRT.anchorMin = new Vector2(0, 1); ntRT.anchorMax = new Vector2(1, 1);
                 ntRT.pivot = new Vector2(0, 1);
-                ntRT.anchoredPosition = new Vector2(82, -6);
-                ntRT.sizeDelta = new Vector2(-92, 28);
+                ntRT.anchoredPosition = new Vector2(142, -6);
+                ntRT.sizeDelta = new Vector2(-152, 28);
                 nt.alignment = TextAlignmentOptions.MidlineLeft;
                 bubbleTop = -36;
             }
@@ -441,7 +590,7 @@ namespace Sparq.UI
             brt.anchorMin = new Vector2(m.fromMe ? 1 : 0, 1);
             brt.anchorMax = new Vector2(m.fromMe ? 1 : 0, 1);
             brt.pivot = new Vector2(m.fromMe ? 1 : 0, 1);
-            brt.anchoredPosition = new Vector2(m.fromMe ? -8 : 82, bubbleTop);
+            brt.anchoredPosition = new Vector2(m.fromMe ? -64 : 142, bubbleTop);
             brt.sizeDelta = new Vector2(maxW, le.preferredHeight + bubbleTop - 8);
             var bImg = bubble.GetComponent<Image>();
             var bubbleSp = LoadSprite(BUBBLE_BG);
@@ -456,6 +605,18 @@ namespace Sparq.UI
             bodyRT.offsetMin = new Vector2(28, 20); bodyRT.offsetMax = new Vector2(-28, -16);
             body.alignment = TextAlignmentOptions.TopLeft;
             body.textWrappingMode = TextWrappingModes.Normal;
+
+            // AI Auto-Translate — only on INCOMING bubbles. Outgoing text the
+            // user wrote themselves, no need to translate. The body Text gets
+            // patched in the callback; if the Function call fails / takes too
+            // long, the original text stays visible.
+            if (_aiTranslateOn && !m.fromMe && !string.IsNullOrWhiteSpace(m.text))
+            {
+                Sparq.Systems.ChatTranslator.Translate(m.text, translated =>
+                {
+                    if (body != null && body.gameObject != null) body.text = translated;
+                });
+            }
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -464,12 +625,17 @@ namespace Sparq.UI
 
         private static void BuildInputBar(Transform card)
         {
+            // Input bar — bumped up and inset to clear the Layer Lab popup
+            // border, so the Send button sits comfortably inside the card
+            // and well above the bottom nav row. Previously the bar sat 22px
+            // above the card's bottom which meant Send was effectively right
+            // against the BottomNavBar; tap targets were colliding.
             var bar = NewGO("InputBar", card, typeof(Image));
             var rt = bar.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(1, 0);
             rt.pivot = new Vector2(0.5f, 0);
-            rt.anchoredPosition = new Vector2(0, 22);
-            rt.sizeDelta = new Vector2(-36, 116);
+            rt.anchoredPosition = new Vector2(0, 60);
+            rt.sizeDelta = new Vector2(-120, 130);
             bar.GetComponent<Image>().color = TITLEBAR;
             _inputBar = bar;
 
@@ -580,9 +746,17 @@ namespace Sparq.UI
             var verdict = Sparq.Safety.ContentModerator.Inspect(raw, "chat");
             if (!verdict.Allowed)
             {
-                Toast(verdict.UserFacingMessage, new Color(0.85f, 0.30f, 0.30f));
+                // ThreatViolence → firm ThreatResponsePanel. Everything else
+                // → inline toast with moderator's user-facing message.
+                if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.ThreatViolence)
+                    && !Sparq.UI.ThreatResponsePanel.RecentlyDismissed())
+                { try { Sparq.UI.ThreatResponsePanel.Show(); } catch {} }
+                else
+                    Toast(verdict.UserFacingMessage, new Color(0.85f, 0.30f, 0.30f));
                 if (_input != null) _input.text = verdict.SanitizedText;   // let them revise; PII hidden
-                // Self-harm ideation still routes to crisis resources.
+                // Self-harm ideation still routes to crisis resources
+                // (independent of the threat path — both can fire if the
+                // message somehow triggered both categories).
                 if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
                     && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
                 { try { Sparq.UI.CrisisResourcesPanel.Show(); } catch {} }
@@ -634,7 +808,12 @@ namespace Sparq.UI
             ctRT.pivot = new Vector2(0.5f, 1);
             ctRT.anchoredPosition = Vector2.zero;
             var vlg = content.GetComponent<VerticalLayoutGroup>();
-            vlg.spacing = 14; vlg.padding = new RectOffset(6, 6, 8, 8);
+            // L/R padding bumped from 6 → 40 so the chat-row backgrounds
+            // (rectangular) don't extend past the diamond-shaped inner edge
+            // of the Layer Lab popup border. Especially visible in the
+            // Individual tab where AddInboxRow paints a flat ROW_BG color
+            // that spans the row's full width.
+            vlg.spacing = 14; vlg.padding = new RectOffset(40, 40, 8, 8);
             vlg.childAlignment = TextAnchor.UpperCenter;
             vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
             vlg.childControlWidth = true; vlg.childControlHeight = true;

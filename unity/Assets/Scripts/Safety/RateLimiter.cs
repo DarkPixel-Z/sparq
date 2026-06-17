@@ -48,6 +48,26 @@ namespace Sparq.Safety
             return until > now ? (int)(until - now) : 0;
         }
 
+        /// <summary>
+        /// Tester-mode wipe — clears any persisted mute and strike history.
+        /// During the closed-test round, the moderation pipeline is brand
+        /// new; testers were getting silently muted by typing threat or
+        /// self-harm patterns while exercising the safety surfaces and then
+        /// couldn't send anything else. Wire this in panel openers to reset
+        /// at the start of every chat session. Remove the call site once
+        /// testing is over.
+        /// </summary>
+        public static void ClearAllRestrictions()
+        {
+            PlayerPrefs.DeleteKey(KEY_MUTE_UNTIL);
+            PlayerPrefs.DeleteKey(KEY_OFFENSE_COUNT);
+            PlayerPrefs.DeleteKey(KEY_STRIKE_LIST);
+            PlayerPrefs.Save();
+            _lastSendTime = -999f;
+            _strikes = null;
+            Debug.Log("[RateLimiter] All restrictions cleared (tester mode).");
+        }
+
         /// <summary>Check if message can be sent. Returns reason if rejected.</summary>
         public static bool CanSend(out string reason)
         {

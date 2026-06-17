@@ -6,6 +6,12 @@ node_modules/
 js/firebase-config.js
 android/app/google-services.json
 
+# Signing keystores — NEVER commit these. If pushed once, anyone with the
+# file + password can publish updates to your Play Store app as you.
+sparq-keystore/
+*.keystore
+*.jks
+
 # Capacitor build output
 dist/
 android/.gradle/

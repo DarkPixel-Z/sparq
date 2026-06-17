@@ -36,9 +36,43 @@ namespace Sparq.UI
             string txt = input.text == null ? "" : input.text.Trim();
             if (string.IsNullOrEmpty(txt)) return;
 
+            // ── RATE LIMIT + CONTENT MODERATION ──────────────────────────
+            // Same pipeline as ChatSender / WorldPanel / ChatPanel — every
+            // outgoing chat surface goes through the same gates so a player
+            // can't bypass moderation by picking a different chat surface.
+            if (!Sparq.Safety.RateLimiter.CanSend(out string rateReason))
+            {
+                Debug.LogWarning($"[LiveChatTab] Rate-limited: {rateReason}");
+                return;
+            }
+            var verdict = Sparq.Safety.ContentModerator.Inspect(txt, "chat");
+            if (!verdict.Allowed)
+            {
+                Debug.LogWarning($"[LiveChatTab] Blocked outgoing message: {verdict.UserFacingMessage}");
+                if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.ThreatViolence)
+                    && !Sparq.UI.ThreatResponsePanel.RecentlyDismissed())
+                { try { Sparq.UI.ThreatResponsePanel.Show(); } catch {} }
+                if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
+                    && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
+                { try { Sparq.UI.CrisisResourcesPanel.Show(); } catch {} }
+                // Don't clear — let user revise. Hide PII via sanitized text.
+                input.text = verdict.SanitizedText ?? "";
+                return;
+            }
+            // Warn-level: send sanitized version (profanity → ***).
+            txt = verdict.SanitizedText ?? txt;
+
             AppendMessage("You", txt, true);
             input.text = "";
             input.ActivateInputField();
+            Sparq.Safety.RateLimiter.RecordSend();
+
+            // Crisis-resources auto-popup on a Clean message that still
+            // contained self-harm ideation (ideation alone is Clean — the
+            // panel is supportive, not punitive).
+            if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
+                && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
+            { try { Sparq.UI.CrisisResourcesPanel.Show(); } catch {} }
 
             try { Sparq.Audio.SoundManager.Play(Sparq.Audio.SoundManager.Sfx.Click); } catch {}
         }

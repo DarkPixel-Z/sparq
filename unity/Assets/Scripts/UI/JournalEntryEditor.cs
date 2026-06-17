@@ -747,6 +747,30 @@ namespace Sparq.UI
             // Allow empty text only if there's a voice clip
             if (string.IsNullOrEmpty(text) && string.IsNullOrEmpty(_voicePath)) { Hide(); return; }
 
+            // ── CONTENT MODERATION ───────────────────────────────────────────
+            // Journal entries are PRIVATE to the user — but moderation still
+            // serves a purpose here: SelfHarmIdeation and ThreatViolence
+            // patterns should still trigger their respective resource panels
+            // so a kid writing "I want to die" in their diary surfaces 988,
+            // and a kid writing "I'm going to bring a gun to school" gets the
+            // firm panel + adult-talk prompt. Lower-tier flags (profanity,
+            // PII) are NOT blocked for journals — a private vent CAN swear,
+            // and writing your own phone number in YOUR OWN journal is fine.
+            if (!string.IsNullOrEmpty(text))
+            {
+                var verdict = Sparq.Safety.ContentModerator.Inspect(text, "journal");
+                if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.ThreatViolence)
+                    && !Sparq.UI.ThreatResponsePanel.RecentlyDismissed())
+                { try { Sparq.UI.ThreatResponsePanel.Show(); } catch {} }
+                if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
+                    && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
+                { try { Sparq.UI.CrisisResourcesPanel.Show(); } catch {} }
+                // No blocking — the journal save continues. The panels are
+                // additive; the entry persists so the user has a record of
+                // what they wrote, and so the audio companion (if any) is
+                // preserved.
+            }
+
             // Use the calendar-picked date; pin time-of-day to "now" so entries
             // on the same date still sort by save order.
             var combined = _selectedDate.Date + DateTime.Now.TimeOfDay;

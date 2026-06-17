@@ -10,12 +10,12 @@ namespace Sparq.UI
     /// </summary>
     public static class HomeBgm
     {
-        // User-supplied loop (Freesound #853586 by bassimat — "elastic metallic
-        // drum groove loop at 120bpm"). Replaces the town-theme rotation, which
-        // read as too chipper for the lobby vibe.
-        private static readonly string[] HOME_TRACKS = {
-            "Assets/Audio/HomeBgm_ElasticMetallic.wav",
-        };
+        // Calm shrine theme from the Action RPG Music pack — picked over the
+        // metallic-groove loop for the wellness vibe (less busy, more
+        // contemplative). Lives in Resources/Audio so Resources.Load works
+        // in both Editor and Player builds.
+        private const string RES_TRACK     = "Audio/BGM15shrine";
+        private const string EDITOR_TRACK  = "Assets/Resources/Audio/BGM15shrine.wav";
 
         private static GameObject _host;
         private static AudioSource _source;
@@ -32,26 +32,29 @@ namespace Sparq.UI
             _source.playOnAwake = false;
             _source.spatialBlend = 0f;
             _source.loop = true;
-            _source.volume = 0.18f;
+            _source.volume = 0.12f;
 
             #if UNITY_EDITOR
-            string track = HOME_TRACKS[Random.Range(0, HOME_TRACKS.Length)];
-            // Auto-fix import settings to prevent choppy playback (was Decompress-on-Load
-            // for big WAV files, causing hitches). Switch to Streaming + Vorbis.
-            ConfigureForStreaming(track);
+            // Auto-fix import settings (streaming + Vorbis) so big WAV files
+            // don't decompress entirely into RAM and stutter.
+            ConfigureForStreaming(EDITOR_TRACK);
+            #endif
 
-            var clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(track);
+            // Runs in BOTH Editor + Player builds. Previously the whole load
+            // path was #if UNITY_EDITOR which meant the BGM was silent in
+            // every APK. Resources.Load works at runtime for files under
+            // Assets/Resources/ — the shrine track is there.
+            var clip = Resources.Load<AudioClip>(RES_TRACK);
             if (clip != null)
             {
                 _source.clip = clip;
                 _source.Play();
-                Debug.Log($"[HomeBgm] Playing {System.IO.Path.GetFileName(track)} (streaming, vorbis, vol 0.18)");
+                Debug.Log($"[HomeBgm] Playing {RES_TRACK} (vol {_source.volume})");
             }
             else
             {
-                Debug.LogWarning($"[HomeBgm] Couldn't load track: {track}");
+                Debug.LogWarning($"[HomeBgm] Couldn't load track: Resources/{RES_TRACK}");
             }
-            #endif
         }
 
         #if UNITY_EDITOR

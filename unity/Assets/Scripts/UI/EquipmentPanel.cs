@@ -191,7 +191,7 @@ namespace Sparq.UI
                     fRT.anchorMin = new Vector2(0.5f, 0.5f); fRT.anchorMax = new Vector2(0.5f, 0.5f);
                     fRT.pivot = new Vector2(0.5f, 0.5f);
                     fRT.anchoredPosition = new Vector2(0, 24);
-                    fRT.sizeDelta = new Vector2(320, 380);
+                    fRT.sizeDelta = new Vector2(460, 540);   // bumped per tester ask: hero too small on Weapons
                     var fImg = figGO.GetComponent<Image>();
                     fImg.sprite = loaded.sprite;
                     fImg.preserveAspect = true;

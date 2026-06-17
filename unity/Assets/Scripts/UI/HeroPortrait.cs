@@ -39,18 +39,25 @@ namespace Sparq.UI
                                       bool excludeWeapon)
         {
             var r = new Result { ok = false, sprite = null, cropped = false };
-#if UNITY_EDITOR
             if (hero == null || string.IsNullOrEmpty(hero.idleBase)) return r;
             string path = hero.idleBase + "000.png";
 
-            // Make the texture CPU-readable so we can scan its alpha channel.
+#if UNITY_EDITOR
+            // Editor-only: make the texture CPU-readable so we can scan its
+            // alpha channel for a tight figure crop. Persisted on the asset
+            // import settings so it stays readable for repeat opens.
             var imp = UnityEditor.AssetImporter.GetAtPath(path) as UnityEditor.TextureImporter;
             if (imp != null && !imp.isReadable)
             {
                 imp.isReadable = true;
                 imp.SaveAndReimport();
             }
+#endif
 
+            // Runs in BOTH Editor + Player builds. Previously the whole body
+            // was #if UNITY_EDITOR which made the EquipmentPanel hero portrait
+            // (the LV.x box) render blank purple in APK builds even though
+            // the source PNG was reachable via Resources.
             var sp = Sparq.Core.SpriteLoader.Load(path);
             if (sp == null)
             {
@@ -59,11 +66,16 @@ namespace Sparq.UI
             }
             if (sp.texture == null || !sp.texture.isReadable)
             {
-                // Couldn't make it readable — return the raw sprite, better than nothing.
+                // Non-CPU-readable texture (the default in Player builds).
+                // Return the raw sprite — uncropped but visible. preserveAspect
+                // on the Image will still scale it sensibly inside the LV box.
                 r.sprite = sp; r.ok = true; r.cropped = false;
                 return r;
             }
 
+#if UNITY_EDITOR
+            // Alpha-crop path is editor-only (needs GetPixels32). Player
+            // builds hit the !isReadable early-return above.
             var tex = sp.texture;
             var px = tex.GetPixels32();
             RectInt fig = AlphaBounds(px, tex.width, tex.height);
@@ -88,6 +100,10 @@ namespace Sparq.UI
             r.cropped = true;
             Debug.Log($"[HeroPortrait] {hero.classId}: figure={fig} " +
                       $"crop=({cropX},{fig.y},{cropW},{fig.height})");
+#else
+            // Player build fallback when a texture somehow comes through as
+            // CPU-readable (rare): raw sprite already covered above.
+            r.sprite = sp; r.ok = true; r.cropped = false;
 #endif
             return r;
         }

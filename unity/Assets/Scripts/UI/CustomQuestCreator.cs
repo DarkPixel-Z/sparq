@@ -182,6 +182,48 @@ namespace Sparq.UI
                 string name = input.text?.Trim();
                 if (string.IsNullOrEmpty(name)) return;
 
+                // ── CONTENT MODERATION ──────────────────────────────────────
+                // Quest titles are user-authored free text that PERSISTS in
+                // the user's quest list — without this an unmoderated title
+                // ("kill myself", "shoot up the school") would silently
+                // become a permanent quest in their data. Same routes as
+                // chat: SelfHarmIdeation surfaces CrisisResourcesPanel;
+                // ThreatViolence surfaces ThreatResponsePanel; PII / slurs
+                // / etc. block + sanitize with a floater message.
+                var verdict = Sparq.Safety.ContentModerator.Inspect(name, "quest");
+                if (!verdict.Allowed)
+                {
+                    Debug.LogWarning($"[CustomQuestCreator] Blocked quest title: {verdict.UserFacingMessage}");
+                    if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.ThreatViolence)
+                        && !Sparq.UI.ThreatResponsePanel.RecentlyDismissed())
+                    { try { Sparq.UI.ThreatResponsePanel.Show(); } catch {} }
+                    else if (!string.IsNullOrEmpty(verdict.UserFacingMessage))
+                    {
+                        XPFloater.Spawn(canvas.transform,
+                            root.transform.position + new Vector3(0, 200, 0),
+                            verdict.UserFacingMessage,
+                            new Color(0.85f, 0.30f, 0.30f));
+                    }
+                    if (verdict.Reasons.Contains(Sparq.Safety.ContentModerator.Category.SelfHarmIdeation)
+                        && !Sparq.UI.CrisisResourcesPanel.RecentlyDismissed())
+                    { try { Sparq.UI.CrisisResourcesPanel.Show(); } catch {} }
+                    // Replace the input with the sanitized version so PII
+                    // doesn't sit visible in the field; the player can edit
+                    // and retry.
+                    input.text = verdict.SanitizedText ?? "";
+                    return;
+                }
+                // Warn-severity: persist the sanitized text (profanity → ***).
+                name = verdict.SanitizedText ?? name;
+                if (verdict.Severity == Sparq.Safety.ContentModerator.Severity.Warn
+                    && !string.IsNullOrEmpty(verdict.UserFacingMessage))
+                {
+                    XPFloater.Spawn(canvas.transform,
+                        root.transform.position + new Vector3(0, 200, 0),
+                        verdict.UserFacingMessage,
+                        new Color(1f, 0.78f, 0.30f));
+                }
+
                 var data = Sparq.Core.SaveService.Data;
                 if (data == null) return;
                 if (data.customTasks == null) data.customTasks = new System.Collections.Generic.List<Sparq.Core.CustomTask>();
